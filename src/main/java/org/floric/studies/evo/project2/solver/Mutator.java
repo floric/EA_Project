@@ -19,7 +19,7 @@ public class Mutator {
             newGen = swapRandom(newGen);
         }
 
-        mutated.fromGenotype(newGen);
+        mutated = Solution.fromGenotype(newGen);
 
         return mutated;
     }

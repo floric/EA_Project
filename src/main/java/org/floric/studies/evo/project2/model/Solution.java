@@ -6,13 +6,18 @@ public class Solution {
 
     private String genotype = "";
 
-    public void fromGenotype(String genotype) {
-        // 123 456 789 | 147 258 369 | 159 267 348
-        this.genotype = genotype;
+    public static Solution fromGenotype(String genotype) {
+        Solution s = new Solution();
+        s.setGenotype(genotype);
+        return s;
     }
 
     public String getGenotype() {
         return this.genotype;
+    }
+
+    private void setGenotype(String gen) {
+        this.genotype = gen;
     }
 
     public Set<Team> getTeams() {
@@ -48,9 +53,7 @@ public class Solution {
     }
 
     public Solution getCopy() {
-        Solution copy = new Solution();
-        copy.fromGenotype(this.genotype);
-        return copy;
+        return Solution.fromGenotype(this.genotype);
     }
 
     public Optional<Team> getTeam(String name) {

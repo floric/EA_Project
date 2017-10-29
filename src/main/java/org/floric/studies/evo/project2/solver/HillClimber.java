@@ -14,7 +14,7 @@ public class HillClimber {
         int lastClimb = 0;
         int i = 0;
 
-        while(i < lastClimb * 3 || i < minPasses) {
+        while(i < lastClimb * 10 || i < minPasses) {
             Solution newSolution = mutator.mutate(bestSolution);
 
             double newScore = evaluator.evaluate(newSolution);

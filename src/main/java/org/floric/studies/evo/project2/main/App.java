@@ -13,19 +13,18 @@ import java.util.Random;
 public class App {
     public static void main(String[] args) {
 
-        Map<Integer, Double[]> positions = new HashMap<>();
+        Map<String, Double[]> positions = new HashMap<>();
         Random rnd = new Random();
         for (int i = 0; i < 9; i++) {
             double posX = rnd.nextDouble();
             double posY = rnd.nextDouble();
-            positions.put(i, new Double[]{posX, posY});
+            positions.put(String.valueOf(i), new Double[]{posX, posY});
         }
 
         Mutator mutator = new Mutator();
         Evaluator evaluator = new Evaluator(positions);
         HillClimber hillClimber = new HillClimber();
-        Solution start = new Solution();
-        start.fromGenotype("012345678012345678012345678");
+        Solution start = Solution.fromGenotype("012345678012345678012345678");
 
         Solution bestSolution = hillClimber.climb(100, start, mutator, evaluator);
         System.out.println(bestSolution);

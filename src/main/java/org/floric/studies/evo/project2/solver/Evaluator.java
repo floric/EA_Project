@@ -7,10 +7,14 @@ import org.floric.studies.evo.project2.model.Team;
 import java.util.*;
 
 public class Evaluator {
-    private Map<Integer, Double[]> positions = new HashMap<>();
+    private Map<String, Double[]> positions = new HashMap<>();
 
-    public Evaluator(Map<Integer, Double[]> positions) {
+    public Evaluator(Map<String, Double[]> positions) {
         this.positions = positions;
+    }
+
+    public Evaluator() {
+
     }
 
     public double evaluate(Solution s) {
@@ -52,30 +56,32 @@ public class Evaluator {
         }
 
         // minimal distance to travel for each team
-        double totalDistance = 0.0;
-        for (Team t : teams) {
-            ArrayList<Integer> route = new ArrayList<>();
-            Integer teamIndex = Integer.valueOf(t.getName());
-            route.add(teamIndex);
+        if (positions.size() > 0) {
+            double totalDistance = 0.0;
+            for (Team t : teams) {
+                ArrayList<Integer> route = new ArrayList<>();
+                Integer teamIndex = Integer.valueOf(t.getName());
+                route.add(teamIndex);
 
-            List<Optional<Meal>> meals = Arrays.asList(t.getStarterMeal(), t.getMainMeal(), t.getDesertMeal());
-            for (Optional<Meal> meal : meals) {
-                if (meal.isPresent()) {
-                    route.add(Integer.valueOf(meal.get().getCook()));
-                } else {
-                    route.add(teamIndex);
+                List<Optional<Meal>> meals = Arrays.asList(t.getStarterMeal(), t.getMainMeal(), t.getDesertMeal());
+                for (Optional<Meal> meal : meals) {
+                    if (meal.isPresent()) {
+                        route.add(Integer.valueOf(meal.get().getCook()));
+                    } else {
+                        route.add(teamIndex);
+                    }
                 }
+
+                totalDistance += getDistanceForRoute(route, positions);
             }
 
-            totalDistance += getDistanceForRoute(route, positions);
+            score = score + 1 / totalDistance;
         }
-
-        score = score + 1 / totalDistance;
 
         return score;
     }
 
-    private double getDistanceForRoute(ArrayList<Integer> route, Map<Integer, Double[]> positions) {
+    private double getDistanceForRoute(ArrayList<Integer> route, Map<String, Double[]> positions) {
         double distance = 0.0;
         for (int i = 0; i < route.size() - 1; i++) {
             double curX = positions.get(route.get(i))[0];

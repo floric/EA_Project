@@ -12,17 +12,15 @@ import static org.junit.Assert.*;
 public class SolutionTest {
     @Test
     public void fromGenotype() throws Exception {
-        Solution s = new Solution();
         String gen = "012345678";
-        s.fromGenotype(gen);
+        Solution s = Solution.fromGenotype(gen);
 
         assertEquals(gen, s.getGenotype());
     }
 
     @Test
     public void getTeams() throws Exception {
-        Solution s = new Solution();
-        s.fromGenotype("012102201");
+        Solution s = Solution.fromGenotype("012102201");
         Set<Team> teams = s.getTeams();
         assertEquals(3, teams.size());
         List<Team> list = teams.stream().filter(t -> t.getName().equals("0")).collect(Collectors.toList());
@@ -48,19 +46,16 @@ public class SolutionTest {
         Solution s = new Solution();
         assertEquals(0, s.getTeamsCount());
 
-        s = new Solution();
-        s.fromGenotype("111");
+        s = Solution.fromGenotype("111");
         assertEquals(1, s.getTeamsCount());
 
-        s = new Solution();
-        s.fromGenotype("122112");
+        s = Solution.fromGenotype("122112");
         assertEquals(2, s.getTeamsCount());
     }
 
     @Test
     public void getTeamsWithMissingAssignments() throws Exception {
-        Solution s = new Solution();
-        s.fromGenotype("012219120");
+        Solution s = Solution.fromGenotype("012219120");
 
         Team teamOne = s.getTeam("0").get();
 
@@ -71,8 +66,7 @@ public class SolutionTest {
 
     @Test
     public void getTeamsWithUnassignedCooks() throws Exception {
-        Solution s = new Solution();
-        s.fromGenotype("012012120");
+        Solution s = Solution.fromGenotype("012012120");
 
         Team teamOne = s.getTeam("0").get();
         Team teamThree = s.getTeam("2").get();
@@ -83,8 +77,7 @@ public class SolutionTest {
 
     @Test
     public void getCopy() throws Exception {
-        Solution s = new Solution();
-        s.fromGenotype("012120210");
+        Solution s = Solution.fromGenotype("012120210");
         Set<Team> teams = s.getTeams();
 
         Solution copy = s.getCopy();

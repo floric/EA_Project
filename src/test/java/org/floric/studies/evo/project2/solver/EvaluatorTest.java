@@ -3,6 +3,8 @@ package org.floric.studies.evo.project2.solver;
 import org.floric.studies.evo.project2.model.Solution;
 import org.junit.Test;
 
+import java.util.HashMap;
+
 import static org.junit.Assert.*;
 
 public class EvaluatorTest {
@@ -11,8 +13,7 @@ public class EvaluatorTest {
 
     @Test
     public void evalutateEmptySolution() {
-        Solution s = new Solution();
-        s.fromGenotype("");
+        Solution s = Solution.fromGenotype("");
 
         Evaluator e = new Evaluator();
         double score = e.evaluate(s);
@@ -21,11 +22,10 @@ public class EvaluatorTest {
 
     @Test
     public void evaluateSolutionWithThreeTeams() {
-        Solution s = new Solution();
-        s.fromGenotype("012102201");
+        Solution s = Solution.fromGenotype("012102201");
 
         Evaluator e = new Evaluator();
         double score = e.evaluate(s);
-        assertEquals(120, score, DELTA);
+        assertEquals(129, score, DELTA);
     }
 }
