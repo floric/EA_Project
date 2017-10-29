@@ -7,6 +7,7 @@ import java.util.stream.IntStream;
 public class Solution {
 
     private String genotype = "";
+    private double score = 0.0;
 
     public Solution() {
     }
@@ -18,6 +19,7 @@ public class Solution {
     public static Solution fromGenotype(String genotype) {
         Solution s = new Solution();
         s.setGenotype(genotype);
+        s.setScore(0.0);
         return s;
     }
 
@@ -74,7 +76,9 @@ public class Solution {
     }
 
     public Solution getCopy() {
-        return Solution.fromGenotype(this.genotype);
+        Solution solution = Solution.fromGenotype(this.genotype);
+        solution.setScore(this.score);
+        return solution;
     }
 
     public Optional<Team> getTeam(String name) {
@@ -95,5 +99,13 @@ public class Solution {
         }
 
         return stringBuilder.toString();
+    }
+
+    public double getScore() {
+        return this.score;
+    }
+
+    public void setScore(double score) {
+        this.score = score;
     }
 }

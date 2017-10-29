@@ -2,34 +2,93 @@ package org.floric.studies.evo.project2.solver;
 
 import org.floric.studies.evo.project2.model.Solution;
 
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
 public class HillClimber {
 
-    public HillClimber() {
+    public static final int MAX_ITERATIONS_SINCE_LAST_CHANGE = 500;
+    public static final int ITERATIONS_PER_THREAD = 5000;
 
+    public HillClimber() {
     }
 
-    public Solution climb(int minPasses, Solution start, Mutator mutator, Evaluator evaluator) {
-        Solution bestSolution = start;
+    public Solution climb(int minPasses, Solution start, Mutator mutator, Map<String, Double[]> positions) {
+        long startTime = System.currentTimeMillis();
+        Solution bestSolution = start.getCopy();
+        int lastImprIteration = 0;
+        int iteration = 0;
+        String bestGen = "";
+
+        // do at least three iterations, otherwise stop if no improvements are done anymore
+        while(iteration < lastImprIteration + MAX_ITERATIONS_SINCE_LAST_CHANGE) {
+            bestSolution = getBestParallel(bestSolution, mutator, positions);
+            if (!bestSolution.getGenotype().equals(bestGen)) {
+                lastImprIteration = iteration;
+                bestGen = bestSolution.getGenotype();
+            }
+
+            System.out.println(String.format("%d, %d since last improvement: %f", iteration, iteration - lastImprIteration, bestSolution.getScore()));
+            System.out.println(bestSolution.getGenotype());
+
+            iteration++;
+        }
+
+        long endTime = System.currentTimeMillis();
+        System.out.println(String.format("Took %f seconds", (endTime - startTime) / 1000.0));
+
+        return bestSolution;
+    }
+
+    private Solution getBestParallel(Solution start, Mutator mutator, Map<String, Double[]> positions) {
+        int cores = Runtime.getRuntime().availableProcessors();
+
+        ExecutorService executorService = Executors.newFixedThreadPool(cores);
+        try {
+            List<Callable<Solution>> tasks = IntStream.range(0, cores)
+                    .mapToObj(i -> (Callable<Solution>) () -> getBestSolution(positions, mutator, start))
+                    .collect(Collectors.toList());
+
+            Optional<Solution> futures = executorService
+                    .invokeAll(tasks)
+                    .stream()
+                    .map(f -> {
+                        try {
+                            return f.get();
+                        } catch (InterruptedException | ExecutionException e) {
+                            e.printStackTrace();
+                            return null;
+                        }
+                    })
+                    .sorted(Comparator.comparingDouble(a -> -a.getScore()))
+                    .findFirst();
+
+            Solution solution = futures.get();
+            executorService.shutdown();
+            return solution;
+        } catch (InterruptedException e) {
+            System.err.println("Execution failed!");
+            executorService.shutdown();
+            return null;
+        }
+    }
+
+    private static Solution getBestSolution(Map<String, Double[]> positions, Mutator mutator, Solution start) {
+        Solution bestSolution = start.getCopy();
+        Evaluator evaluator = new Evaluator(positions);
         double bestScore = evaluator.evaluate(bestSolution);
-        int lastClimb = 0;
-        int i = 0;
 
-        while(i < lastClimb * 3 || i < minPasses) {
+        for (int i = 0; i < ITERATIONS_PER_THREAD; i++) {
             Solution newSolution = mutator.mutate(bestSolution);
-
             double newScore = evaluator.evaluate(newSolution);
             if (newScore > bestScore) {
                 bestScore = newScore;
                 bestSolution = newSolution;
-                lastClimb = i;
-                System.out.println(String.format("%d: %f, (%f), distance: %f", i, bestScore, bestScore * 100 / evaluator.getMaxScore(bestSolution), evaluator.getTotalDistance(bestSolution.getTeams())));
-                System.out.println(bestSolution.getGenotype());
+                bestSolution.setScore(bestScore);
             }
-
-            i++;
         }
-
-        System.out.println(String.format("Stopped after %d iterations.", i));
 
         return bestSolution;
     }
