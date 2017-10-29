@@ -1,15 +1,36 @@
 package org.floric.studies.evo.project2.model;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Solution {
 
     private String genotype = "";
 
+    public Solution() {
+    }
+
+    public Solution(int count) {
+        this.genotype = generateGenotype(count);
+    }
+
     public static Solution fromGenotype(String genotype) {
         Solution s = new Solution();
         s.setGenotype(genotype);
         return s;
+    }
+
+    public static String generateGenotype(int count) {
+        return IntStream.range(0, 3)
+                .mapToObj(i -> generatePartOfGenotype(count))
+                .collect(Collectors.joining());
+    }
+
+    private static String generatePartOfGenotype(int count) {
+        return IntStream.range('0', '0' + count)
+                .mapToObj(c -> "" + (char) c)
+                .collect(Collectors.joining());
     }
 
     public String getGenotype() {
@@ -23,7 +44,7 @@ public class Solution {
     public Set<Team> getTeams() {
         Set<Team> teams = new HashSet<>();
         for (int i = 0; i < getTeamsCount(); i++) {
-            Team t = new Team(String.valueOf(i));
+            Team t = new Team(genotype.substring(i, i + 1));
             String starterPart = genotype.substring(0, getTeamsCount());
             String mainPart = genotype.substring(getTeamsCount(), getTeamsCount() * 2);
             String desertPart = genotype.substring(getTeamsCount() * 2, getTeamsCount() * 3);
@@ -66,9 +87,10 @@ public class Solution {
         for (Team t : getTeams()) {
             stringBuilder.append(t.getName()).append(": ");
             List<Optional<Meal>> meals = Arrays.asList(t.getStarterMeal(), t.getMainMeal(), t.getDesertMeal());
-            String mealsLine = meals.stream().map(m -> m
-                    .map(meal1 -> (meal1.getCook() + " with (" + meal1.getGuests().stream().reduce((a, b) -> String.format("%s,%s", a, b)).get()) + ")")
-                    .orElse("-")).reduce((a, b) -> String.format("%s | %s", a, b)).get();
+            String mealsLine = meals.stream()
+                    .map(m -> m.isPresent() ? m.get().toString() : "-")
+                    .reduce((a, b) -> String.format("%s | %s", a, b))
+                    .get();
             stringBuilder.append(mealsLine).append("\n");
         }
 

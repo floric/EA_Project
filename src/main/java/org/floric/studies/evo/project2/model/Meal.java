@@ -21,4 +21,9 @@ public class Meal {
     public Set<String> getGuests() {
         return guests;
     }
+
+    @Override
+    public String toString() {
+        return getCook() + " with (" + getGuests().stream().reduce((a, b) -> String.format("%s,%s", a, b)).get() + ")";
+    }
 }

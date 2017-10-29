@@ -14,7 +14,7 @@ public class HillClimber {
         int lastClimb = 0;
         int i = 0;
 
-        while(i < lastClimb * 10 || i < minPasses) {
+        while(i < lastClimb * 3 || i < minPasses) {
             Solution newSolution = mutator.mutate(bestSolution);
 
             double newScore = evaluator.evaluate(newSolution);
@@ -22,7 +22,7 @@ public class HillClimber {
                 bestScore = newScore;
                 bestSolution = newSolution;
                 lastClimb = i;
-                System.out.println(String.format("%d: %f", i, bestScore));
+                System.out.println(String.format("%d: %f, (%f), distance: %f", i, bestScore, bestScore * 100 / evaluator.getMaxScore(bestSolution), evaluator.getTotalDistance(bestSolution.getTeams())));
                 System.out.println(bestSolution.getGenotype());
             }
 

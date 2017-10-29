@@ -14,7 +14,6 @@ public class Evaluator {
     }
 
     public Evaluator() {
-
     }
 
     public double evaluate(Solution s) {
@@ -41,7 +40,7 @@ public class Evaluator {
         }
 
         // possible
-        // every team meets 8 other teams during lunches
+        // every team meets 7 other teams during lunches
         for (Team t : teams) {
             Set<String> meetTeams = new HashSet<>();
             List<Optional<Meal>> meals = Arrays.asList(t.getStarterMeal(), t.getMainMeal(), t.getDesertMeal());
@@ -57,31 +56,14 @@ public class Evaluator {
 
         // minimal distance to travel for each team
         if (positions.size() > 0) {
-            double totalDistance = 0.0;
-            for (Team t : teams) {
-                ArrayList<Integer> route = new ArrayList<>();
-                Integer teamIndex = Integer.valueOf(t.getName());
-                route.add(teamIndex);
-
-                List<Optional<Meal>> meals = Arrays.asList(t.getStarterMeal(), t.getMainMeal(), t.getDesertMeal());
-                for (Optional<Meal> meal : meals) {
-                    if (meal.isPresent()) {
-                        route.add(Integer.valueOf(meal.get().getCook()));
-                    } else {
-                        route.add(teamIndex);
-                    }
-                }
-
-                totalDistance += getDistanceForRoute(route, positions);
-            }
-
+            double totalDistance = getTotalDistance(teams);
             score = score + 1 / totalDistance;
         }
 
         return score;
     }
 
-    private double getDistanceForRoute(ArrayList<Integer> route, Map<String, Double[]> positions) {
+    private double getDistanceForRoute(ArrayList<String> route) {
         double distance = 0.0;
         for (int i = 0; i < route.size() - 1; i++) {
             double curX = positions.get(route.get(i))[0];
@@ -93,5 +75,33 @@ public class Evaluator {
         }
 
         return distance;
+    }
+
+    public double getMaxScore(Solution s) {
+        return 47 * s.getTeamsCount();
+    }
+
+    public double getTotalDistance(Set<Team> teams) {
+        double totalDistance = 0.0;
+        for (Team t : teams) {
+            ArrayList<String> route = new ArrayList<>();
+
+            // add start
+            route.add(t.getName());
+
+            // add travel steps for each meal or return to home
+            List<Optional<Meal>> meals = Arrays.asList(t.getStarterMeal(), t.getMainMeal(), t.getDesertMeal());
+            for (Optional<Meal> meal : meals) {
+                if (meal.isPresent()) {
+                    route.add(meal.get().getCook());
+                } else {
+                    route.add(t.getName());
+                }
+            }
+
+            totalDistance += getDistanceForRoute(route);
+        }
+
+        return totalDistance;
     }
 }
