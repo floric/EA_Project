@@ -7,9 +7,9 @@ import org.floric.studies.evo.project2.model.Team;
 import java.util.*;
 
 public class Evaluator {
-    private Map<String, Double[]> positions = new HashMap<>();
+    private Map<Character, Double[]> positions = new HashMap<>();
 
-    public Evaluator(Map<String, Double[]> positions) {
+    public Evaluator(Map<Character, Double[]> positions) {
         this.positions = positions;
     }
 
@@ -42,7 +42,7 @@ public class Evaluator {
         // possible
         // every team meets 7 other teams during lunches
         for (Team t : teams) {
-            Set<String> meetTeams = new HashSet<>();
+            Set<Character> meetTeams = new HashSet<>();
             List<Optional<Meal>> meals = Arrays.asList(t.getStarterMeal(), t.getMainMeal(), t.getDesertMeal());
             for (Optional<Meal> meal : meals) {
                 if (meal.isPresent()) {
@@ -63,7 +63,7 @@ public class Evaluator {
         return score;
     }
 
-    private double getDistanceForRoute(ArrayList<String> route) {
+    private double getDistanceForRoute(ArrayList<Character> route) {
         double distance = 0.0;
         for (int i = 0; i < route.size() - 1; i++) {
             double curX = positions.get(route.get(i))[0];
@@ -84,7 +84,7 @@ public class Evaluator {
     public double getTotalDistance(Set<Team> teams) {
         double totalDistance = 0.0;
         for (Team t : teams) {
-            ArrayList<String> route = new ArrayList<>();
+            ArrayList<Character> route = new ArrayList<>();
 
             // add start
             route.add(t.getName());

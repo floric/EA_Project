@@ -3,16 +3,16 @@ package org.floric.studies.evo.project2.model;
 import java.util.*;
 
 public class Team {
-    private String name;
+    private Character name;
     private Optional<Meal> starterMeal = Optional.empty();
     private Optional<Meal> mainMeal = Optional.empty();
     private Optional<Meal> desertMeal = Optional.empty();
 
-    public Team(String name) {
+    public Team(Character name) {
         this.name = name;
     }
 
-    public String getName() {
+    public Character getName() {
         return name;
     }
 

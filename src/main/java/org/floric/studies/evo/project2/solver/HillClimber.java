@@ -15,7 +15,7 @@ public class HillClimber {
     public HillClimber() {
     }
 
-    public Solution climb(int minPasses, Solution start, Mutator mutator, Map<String, Double[]> positions) {
+    public Solution climb(Solution start, Mutator mutator, Map<Character, Double[]> positions) {
         long startTime = System.currentTimeMillis();
         Solution bestSolution = start.getCopy();
         int lastImprIteration = 0;
@@ -42,7 +42,7 @@ public class HillClimber {
         return bestSolution;
     }
 
-    private Solution getBestParallel(Solution start, Mutator mutator, Map<String, Double[]> positions) {
+    private Solution getBestParallel(Solution start, Mutator mutator, Map<Character, Double[]> positions) {
         int cores = Runtime.getRuntime().availableProcessors();
 
         ExecutorService executorService = Executors.newFixedThreadPool(cores);
@@ -75,7 +75,7 @@ public class HillClimber {
         }
     }
 
-    private static Solution getBestSolution(Map<String, Double[]> positions, Mutator mutator, Solution start) {
+    private static Solution getBestSolution(Map<Character, Double[]> positions, Mutator mutator, Solution start) {
         Solution bestSolution = start.getCopy();
         Evaluator evaluator = new Evaluator(positions);
         double bestScore = evaluator.evaluate(bestSolution);

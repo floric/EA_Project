@@ -46,7 +46,7 @@ public class Solution {
     public Set<Team> getTeams() {
         Set<Team> teams = new HashSet<>();
         for (int i = 0; i < getTeamsCount(); i++) {
-            Team t = new Team(genotype.substring(i, i + 1));
+            Team t = new Team(genotype.charAt(i));
             String starterPart = genotype.substring(0, getTeamsCount());
             String mainPart = genotype.substring(getTeamsCount(), getTeamsCount() * 2);
             String desertPart = genotype.substring(getTeamsCount() * 2, getTeamsCount() * 3);
@@ -63,8 +63,8 @@ public class Solution {
     private Optional<Meal> findAssignedMeal(Team t, String part) {
         for (int j = 0; j < part.length(); j = j + 3) {
             String combinedTeams = part.substring(j, j + 3);
-            if (combinedTeams.contains(t.getName())) {
-                return Optional.of(new Meal(combinedTeams.substring(0, 1), combinedTeams.substring(1).split("")));
+            if (combinedTeams.contains(t.getName().toString())) {
+                return Optional.of(new Meal(combinedTeams.charAt(0), combinedTeams.substring(1).toCharArray()));
             }
         }
 
@@ -81,7 +81,7 @@ public class Solution {
         return solution;
     }
 
-    public Optional<Team> getTeam(String name) {
+    public Optional<Team> getTeam(Character name) {
         return getTeams().stream().filter(t -> t.getName().equals(name)).findFirst();
     }
 
@@ -94,7 +94,7 @@ public class Solution {
             String mealsLine = meals.stream()
                     .map(m -> m.isPresent() ? m.get().toString() : "-")
                     .reduce((a, b) -> String.format("%s | %s", a, b))
-                    .get();
+                    .orElse("");
             stringBuilder.append(mealsLine).append("\n");
         }
 

@@ -1,29 +1,36 @@
 package org.floric.studies.evo.project2.model;
 
+import com.google.common.primitives.Chars;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Meal {
-    private String cook = "";
-    private Set<String> guests = new HashSet<>();
+    private Character cook = '0';
+    private Set<Character> guests = new HashSet<>();
 
-    public Meal(String cook, String... guests) {
+    public Meal(char cook, char... guests) {
         this.cook = cook;
-        this.guests = Stream.of(guests).collect(Collectors.toSet());
+        this.guests = new HashSet<>(Chars.asList(guests));
     }
 
-    public String getCook() {
+    public Character getCook() {
         return cook;
     }
 
-    public Set<String> getGuests() {
+    public Set<Character> getGuests() {
         return guests;
     }
 
     @Override
     public String toString() {
-        return getCook() + " with (" + getGuests().stream().reduce((a, b) -> String.format("%s,%s", a, b)).get() + ")";
+        return String.format("%c with (%s)",
+                getCook(),
+                getGuests().stream()
+                        .map(Object::toString)
+                        .reduce((a, b) -> String.format("%s,%s", a, b))
+                        .get());
     }
 }
