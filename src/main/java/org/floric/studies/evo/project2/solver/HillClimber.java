@@ -10,7 +10,7 @@ import java.util.stream.IntStream;
 public class HillClimber {
 
     public static final int MAX_ITERATIONS_SINCE_LAST_CHANGE = 500;
-    public static final int ITERATIONS_PER_THREAD = 5000;
+    public static final int ITERATIONS_PER_THREAD = 500;
 
     public HillClimber() {
     }

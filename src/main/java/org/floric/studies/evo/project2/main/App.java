@@ -16,7 +16,7 @@ public class App {
         Map<Character, Double[]> positions = new HashMap<>();
         Random rnd = new Random(POSITIONS_SEED);
 
-        String genotype = Solution.generateGenotype(27);
+        String genotype = Solution.generateGenotype(108);
         Solution start = Solution.fromGenotype(genotype);
 
         // generate random positions, can be replaced with real data
@@ -25,6 +25,11 @@ public class App {
             double posX = rnd.nextDouble();
             double posY = rnd.nextDouble();
             positions.put(key, new Double[]{posX, posY});
+        }
+
+        // print positions
+        for (Map.Entry<Character, Double[]> characterEntry : positions.entrySet()) {
+            System.out.println(String.format("%c: %f, %f", characterEntry.getKey(), characterEntry.getValue()[0], characterEntry.getValue()[1]));
         }
 
         Mutator mutator = new Mutator();

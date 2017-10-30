@@ -9,7 +9,7 @@ public class Solution {
     private String genotype = "";
     private double score = 0.0;
 
-    public Solution() {
+    private Solution() {
     }
 
     public Solution(int count) {

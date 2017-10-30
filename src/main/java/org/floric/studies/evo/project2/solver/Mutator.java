@@ -5,16 +5,13 @@ import org.floric.studies.evo.project2.model.Solution;
 import java.util.Random;
 
 public class Mutator {
-    public static final double MAX_MUTATIONS_PER_INVIDUUM = 0.3;
-
     public Mutator() {
     }
 
     public Solution mutate(Solution s) {
         Random rnd = new Random();
         String newGen = s.getGenotype();
-        int maxMutations = (int) (newGen.length() * MAX_MUTATIONS_PER_INVIDUUM);
-        int mutationsPerIndividuum = rnd.nextInt(maxMutations > newGen.length() ? newGen.length() : maxMutations);
+        int mutationsPerIndividuum = rnd.nextInt(newGen.length());
         for (int i = 0; i < mutationsPerIndividuum; i++) {
             newGen = swapRandom(newGen);
         }
