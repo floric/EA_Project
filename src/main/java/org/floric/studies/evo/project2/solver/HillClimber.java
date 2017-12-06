@@ -1,5 +1,6 @@
 package org.floric.studies.evo.project2.solver;
 
+import com.google.common.collect.Lists;
 import org.floric.studies.evo.project2.model.Solution;
 
 import java.util.*;
@@ -15,12 +16,12 @@ public class HillClimber {
     public HillClimber() {
     }
 
-    public Solution climb(Solution start, Mutator mutator, Map<Character, Double[]> positions) {
+    public Solution climb(Solution start, Mutator mutator, Map<Integer, Double[]> positions) {
         long startTime = System.currentTimeMillis();
         Solution bestSolution = start.getCopy();
         int lastImprIteration = 0;
         int iteration = 0;
-        String bestGen = "";
+        List<Integer> bestGen = Lists.newArrayList();
 
         // do at least three iterations, otherwise stop if no improvements are done anymore
         while(iteration < lastImprIteration + MAX_ITERATIONS_SINCE_LAST_CHANGE) {
@@ -42,7 +43,7 @@ public class HillClimber {
         return bestSolution;
     }
 
-    private Solution getBestSolutionInParallel(Solution start, Mutator mutator, Map<Character, Double[]> positions) {
+    private Solution getBestSolutionInParallel(Solution start, Mutator mutator, Map<Integer, Double[]> positions) {
         int cores = Runtime.getRuntime().availableProcessors();
 
         ExecutorService executorService = Executors.newFixedThreadPool(cores);
@@ -75,7 +76,7 @@ public class HillClimber {
         }
     }
 
-    private static Solution getBestSolution(Map<Character, Double[]> positions, Mutator mutator, Solution start) {
+    private static Solution getBestSolution(Map<Integer, Double[]> positions, Mutator mutator, Solution start) {
         Solution bestSolution = start.getCopy();
         Evaluator evaluator = new Evaluator(positions);
         double bestScore = evaluator.evaluate(bestSolution);

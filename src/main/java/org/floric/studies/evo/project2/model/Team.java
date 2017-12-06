@@ -3,16 +3,16 @@ package org.floric.studies.evo.project2.model;
 import java.util.*;
 
 public class Team {
-    private Character name;
+    private int name;
     private Optional<Meal> starterMeal = Optional.empty();
     private Optional<Meal> mainMeal = Optional.empty();
     private Optional<Meal> desertMeal = Optional.empty();
 
-    public Team(Character name) {
+    public Team(int name) {
         this.name = name;
     }
 
-    public Character getName() {
+    public int getName() {
         return name;
     }
 
@@ -44,7 +44,7 @@ public class Team {
         List<Optional<Meal>> meals = Arrays.asList(getStarterMeal(), getMainMeal(), getDesertMeal());
 
         for (Optional<Meal> meal : meals) {
-            if (meal.isPresent() && meal.get().getCook().equals(this.name)) {
+            if (meal.isPresent() && meal.get().getCook() == this.name) {
                 return meal;
 
             }

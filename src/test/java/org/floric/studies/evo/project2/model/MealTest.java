@@ -1,5 +1,6 @@
 package org.floric.studies.evo.project2.model;
 
+import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -13,32 +14,18 @@ import static org.junit.Assert.*;
 public class MealTest {
     @Test
     public void getCook() throws Exception {
-        String cook = "CookA";
-        Meal m = new Meal(cook);
+        Meal m = new Meal(123);
 
-        assertEquals(cook, m.getCook());
+        assertEquals(123, m.getCook());
     }
 
     @Test
     public void getGuestsWithStrings() throws Exception {
-        String guestA = "guestA";
-        String guestB = "guestB";
-        String cookA = "cookA";
+        int guestA = 1;
+        int guestB = 2;
+        int cookA = 3;
 
-        Meal m = new Meal(cookA, guestA, guestB);
-
-        assertEquals(cookA, m.getCook());
-        assertTrue(m.getGuests().contains(guestA));
-        assertTrue(m.getGuests().contains(guestB));
-    }
-
-    @Test
-    public void getGuestsWithArray() throws Exception {
-        String guestA = "A";
-        String guestB = "B";
-        String cookA = "cookA";
-
-        Meal m = new Meal(cookA, (guestA + guestB).split(""));
+        Meal m = new Meal(cookA, Lists.newArrayList(guestA, guestB));
 
         assertEquals(cookA, m.getCook());
         assertTrue(m.getGuests().contains(guestA));

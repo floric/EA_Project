@@ -1,12 +1,14 @@
 package org.floric.studies.evo.project2.model;
 
+import com.google.common.collect.Lists;
+
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public class Solution {
 
-    private String genotype = "";
+    private List<Integer> genotype = Lists.newArrayList();
     private double score = 0.0;
 
     private Solution() {
@@ -16,40 +18,40 @@ public class Solution {
         this.genotype = generateGenotype(count);
     }
 
-    public static Solution fromGenotype(String genotype) {
+    public static Solution fromGenotype(List<Integer> genotype) {
         Solution s = new Solution();
         s.setGenotype(genotype);
         s.setScore(0.0);
         return s;
     }
 
-    public static String generateGenotype(int count) {
-        return IntStream.range(0, 3)
-                .mapToObj(i -> generatePartOfGenotype(count))
-                .collect(Collectors.joining());
+    public static List<Integer> generateGenotype(int count) {
+        List<Integer> genotype = Lists.newArrayList();
+        for (int i = 0; i < 3; i++) {
+            genotype.addAll(generatePartOfGenotype(count));
+        }
+        return genotype;
     }
 
-    private static String generatePartOfGenotype(int count) {
-        return IntStream.range('0', '0' + count)
-                .mapToObj(c -> "" + (char) c)
-                .collect(Collectors.joining());
+    private static List<Integer> generatePartOfGenotype(int count) {
+        return IntStream.range(0, count).boxed().collect(Collectors.toList());
     }
 
-    public String getGenotype() {
+    public List<Integer> getGenotype() {
         return this.genotype;
     }
 
-    private void setGenotype(String gen) {
+    private void setGenotype(List<Integer> gen) {
         this.genotype = gen;
     }
 
     public Set<Team> getTeams() {
         Set<Team> teams = new HashSet<>();
         for (int i = 0; i < getTeamsCount(); i++) {
-            Team t = new Team(genotype.charAt(i));
-            String starterPart = genotype.substring(0, getTeamsCount());
-            String mainPart = genotype.substring(getTeamsCount(), getTeamsCount() * 2);
-            String desertPart = genotype.substring(getTeamsCount() * 2, getTeamsCount() * 3);
+            Team t = new Team(genotype.get(i));
+            List<Integer> starterPart = genotype.subList(0, getTeamsCount());
+            List<Integer> mainPart = genotype.subList(getTeamsCount(), getTeamsCount() * 2);
+            List<Integer> desertPart = genotype.subList(getTeamsCount() * 2, getTeamsCount() * 3);
 
             t.setStarterMeal(findAssignedMeal(t, starterPart));
             t.setMainMeal(findAssignedMeal(t, mainPart));
@@ -60,11 +62,11 @@ public class Solution {
         return teams;
     }
 
-    private Optional<Meal> findAssignedMeal(Team t, String part) {
-        for (int j = 0; j < part.length(); j = j + 3) {
-            String combinedTeams = part.substring(j, j + 3);
-            if (combinedTeams.contains(t.getName().toString())) {
-                return Optional.of(new Meal(combinedTeams.charAt(0), combinedTeams.substring(1).toCharArray()));
+    private Optional<Meal> findAssignedMeal(Team t, List<Integer> part) {
+        for (int j = 0; j < part.size(); j = j + 3) {
+            List<Integer> combinedTeams = part.subList(j, j + 3);
+            if (combinedTeams.contains(t.getName())) {
+                return Optional.of(new Meal(combinedTeams.get(0), combinedTeams.subList(1, combinedTeams.size())));
             }
         }
 
@@ -72,7 +74,7 @@ public class Solution {
     }
 
     public int getTeamsCount() {
-        return genotype.length() / 3;
+        return genotype.size() / 3;
     }
 
     public Solution getCopy() {
@@ -81,8 +83,8 @@ public class Solution {
         return solution;
     }
 
-    public Optional<Team> getTeam(Character name) {
-        return getTeams().stream().filter(t -> t.getName().equals(name)).findFirst();
+    public Optional<Team> getTeam(int name) {
+        return getTeams().stream().filter(t -> t.getName() == name).findFirst();
     }
 
     @Override
