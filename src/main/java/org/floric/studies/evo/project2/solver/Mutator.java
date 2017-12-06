@@ -11,7 +11,7 @@ public class Mutator {
     public Solution mutate(Solution s) {
         Random rnd = new Random();
         String newGen = s.getGenotype();
-        int mutationsPerIndividuum = rnd.nextInt(newGen.length());
+        int mutationsPerIndividuum = (int) (rnd.nextInt(newGen.length()) * 0.5);
         for (int i = 0; i < mutationsPerIndividuum; i++) {
             newGen = swapRandom(newGen);
         }

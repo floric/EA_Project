@@ -9,8 +9,8 @@ import java.util.stream.IntStream;
 
 public class HillClimber {
 
-    public static final int MAX_ITERATIONS_SINCE_LAST_CHANGE = 500;
-    public static final int ITERATIONS_PER_THREAD = 500;
+    public static final int MAX_ITERATIONS_SINCE_LAST_CHANGE = 400;
+    public static final int ITERATIONS_PER_THREAD = 5000;
 
     public HillClimber() {
     }
@@ -24,7 +24,7 @@ public class HillClimber {
 
         // do at least three iterations, otherwise stop if no improvements are done anymore
         while(iteration < lastImprIteration + MAX_ITERATIONS_SINCE_LAST_CHANGE) {
-            bestSolution = getBestParallel(bestSolution, mutator, positions);
+            bestSolution = getBestSolutionInParallel(bestSolution, mutator, positions);
             if (!bestSolution.getGenotype().equals(bestGen)) {
                 lastImprIteration = iteration;
                 bestGen = bestSolution.getGenotype();
@@ -42,7 +42,7 @@ public class HillClimber {
         return bestSolution;
     }
 
-    private Solution getBestParallel(Solution start, Mutator mutator, Map<Character, Double[]> positions) {
+    private Solution getBestSolutionInParallel(Solution start, Mutator mutator, Map<Character, Double[]> positions) {
         int cores = Runtime.getRuntime().availableProcessors();
 
         ExecutorService executorService = Executors.newFixedThreadPool(cores);

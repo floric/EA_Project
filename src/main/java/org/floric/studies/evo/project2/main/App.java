@@ -16,7 +16,7 @@ public class App {
         Map<Character, Double[]> positions = new HashMap<>();
         Random rnd = new Random(POSITIONS_SEED);
 
-        String genotype = Solution.generateGenotype(108);
+        String genotype = Solution.generateGenotype(9);
         Solution start = Solution.fromGenotype(genotype);
 
         // generate random positions, can be replaced with real data
