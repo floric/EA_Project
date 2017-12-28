@@ -1,5 +1,6 @@
 package org.floric.studies.evo.project2.model;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import java.util.*;
@@ -33,8 +34,22 @@ public class Solution {
         return genotype;
     }
 
+    public static List<Integer> generateRandomGenotype(int count) {
+        List<Integer> genotype = Lists.newArrayList();
+        for (int i = 0; i < 3; i++) {
+            genotype.addAll(generateRandomPartOfGenotype(count));
+        }
+        return ImmutableList.copyOf(genotype);
+    }
+
     private static List<Integer> generatePartOfGenotype(int count) {
         return IntStream.range(0, count).boxed().collect(Collectors.toList());
+    }
+
+    private static List<Integer> generateRandomPartOfGenotype(int count) {
+        List<Integer> list = generatePartOfGenotype(count);
+        Collections.shuffle(list);
+        return ImmutableList.copyOf(list);
     }
 
     public List<Integer> getGenotype() {

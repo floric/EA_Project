@@ -16,9 +16,10 @@ public class HillClimber {
     public HillClimber() {
     }
 
-    public Solution climb(Solution start, Mutator mutator, Map<Integer, Double[]> positions) {
+    public Solution solve(Map<Integer, Double[]> positions) {
+        Mutator mutator = new Mutator();
         long startTime = System.currentTimeMillis();
-        Solution bestSolution = start.getCopy();
+        Solution bestSolution = Solution.fromGenotype(Solution.generateGenotype(positions.size()));
         int lastImprIteration = 0;
         int iteration = 0;
         List<Integer> bestGen = Lists.newArrayList();

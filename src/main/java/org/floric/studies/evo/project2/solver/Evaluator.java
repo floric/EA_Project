@@ -13,9 +13,6 @@ public class Evaluator {
         this.positions = positions;
     }
 
-    public Evaluator() {
-    }
-
     public double evaluate(Solution s) {
         double score = 0;
 
@@ -57,7 +54,7 @@ public class Evaluator {
         // minimal distance to travel for each team
         if (positions.size() > 0) {
             double totalDistance = getTotalDistance(teams);
-            score = score + 1 / totalDistance;
+            score = score + (teams.size() * 5 / totalDistance);
         }
 
         return score;
@@ -78,7 +75,7 @@ public class Evaluator {
     }
 
     public double getMaxScore(Solution s) {
-        return 47 * s.getTeamsCount();
+        return 47 * s.getTeamsCount() + 15;
     }
 
     public double getTotalDistance(Set<Team> teams) {
