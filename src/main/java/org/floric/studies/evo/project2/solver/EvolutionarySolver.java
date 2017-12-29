@@ -3,11 +3,13 @@ package org.floric.studies.evo.project2.solver;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.floric.studies.evo.project2.model.Solution;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class EvolutionarySolver {
@@ -17,17 +19,16 @@ public class EvolutionarySolver {
     private Map<String, Integer> improvements = Maps.newHashMap();
     private Map<String, Double> mutationProbability = Maps.newHashMap();
     private long totalImprovements = 0L;
-    private long triedMutations = 0L;
 
     public EvolutionarySolver() {
     }
 
     public Solution solve(Map<Integer, Double[]> positions) {
         Evaluator ev = new Evaluator(positions);
-        int individualsCount = 200;
-        int iterations = 10000;
+        int individualsCount = 100;
+        int iterations = 1000;
         double bestValue = Double.MIN_VALUE;
-        List<Integer> bestIndividuum = Lists.newArrayList();
+        ImmutableList<Integer> bestIndividuum = ImmutableList.of();
 
         // start
         List<ImmutableList<Integer>> individuals = Lists.newArrayList();
@@ -58,7 +59,7 @@ public class EvolutionarySolver {
                 }
             }
 
-            double minScore = bestValue * (0.99 + 0.01 * (1 - Math.pow(SIMULATED_ANNEALING_SPEED, i)));
+            double minScore = bestValue * (0.995 + 0.005 * (1 - Math.pow(SIMULATED_ANNEALING_SPEED, i)));
 
             for (int j = 0; j < individuals.size(); j++) {
                 double score = scores.get(j);
@@ -77,8 +78,6 @@ public class EvolutionarySolver {
             double avgScores = scores.stream().mapToDouble(val -> val).average().orElse(0.0);
             double varianceScores = scores.stream().mapToDouble(val -> Math.pow((val - avgScores), 2.0)).sum() / scores.size();
 
-            // System.out.println(String.format("Avg: %f, Var: %f, Min: %f, Max: %f|%f, Sum: %f, Minscore: %f", avgEvaluations, varianceEvalutations, minEvalutations, maxEvaluations, bestValue, sumEvalutations, minScore));
-
             for (int j = 0; j < evaluations.size(); j++) {
                 Double val = evaluations.get(j);
                 double fraction = sumEvalutations == 0.0 ? 0.0 : ((val - minEvalutations) / sumEvalutations);
@@ -86,16 +85,16 @@ public class EvolutionarySolver {
             }
 
             // if border of annealing is hit, use best individuum to continue
+            Set<Integer> bestIndividuums = Sets.newHashSet();
             if (sumEvalutations == 0.0) {
                 for (int j = 0; j < scores.size(); j++) {
                     if (scores.get(j) == maxScores) {
-                        evaluations.set(j, 1.0);
+                        bestIndividuums.add(j);
                     }
                 }
             }
-
-            if (i % 100 == 0) {
-                System.out.println(evaluations.stream().map(val -> val * 100.0).collect(Collectors.toList()));
+            for (Integer index : bestIndividuums) {
+                evaluations.set(index, 1.0 / bestIndividuums.size());
             }
 
             // select
@@ -114,13 +113,16 @@ public class EvolutionarySolver {
             }
 
             if (i % 100 == 0) {
+                long validIndividuums = evaluations.stream().filter(val -> val > 0.0).count();
                 mutationProbability.entrySet().forEach(entry -> {
                     double newProbability = (3 * entry.getValue() + getImprovementsCount(entry.getKey()) / (double) totalImprovements) / 4.0;
                     mutationProbability.put(entry.getKey(), newProbability);
                 });
-                System.out.println(String.format("%s: min: %f, best: %f, success: %f", i, minScore, bestValue,(double) totalImprovements * 100.0 / triedMutations));
+                System.out.println(String.format("%s: min: %f, best: %f; valid individuums: %d", i, minScore, bestValue, validIndividuums));
             }
         }
+
+        System.out.println(Solution.fromGenotype(bestIndividuum).toString());
 
         return null;
     }
@@ -157,12 +159,12 @@ public class EvolutionarySolver {
         double swapGuestsPro = mutationProbability.get("swapGuests");
 
         if (mutationVal < cyclicSwapPro) {
-            for (int i = 0; i < rnd.nextInt(9) + 1; i++) {
+            for (int i = 0; i < rnd.nextInt(3) + 1; i++) {
                 individuum = Mutator.cyclicSwap(individuum);
             }
             mutationType = "cyclicSwap";
         } else if (mutationVal < changeCookPro + cyclicSwapPro) {
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < rnd.nextInt(2) + 1; i++) {
                 individuum = Mutator.changeCook(individuum);
             }
             mutationType = "changeCook";
@@ -177,8 +179,6 @@ public class EvolutionarySolver {
             improvements.put(mutationType, improvementsForType);
             totalImprovements++;
         }
-
-        triedMutations++;
 
         return individuum;
     }

@@ -1,5 +1,7 @@
 package org.floric.studies.evo.project2.model;
 
+import com.google.common.collect.Sets;
+
 import java.util.*;
 
 public class Team {
@@ -51,5 +53,23 @@ public class Team {
         }
 
         return Optional.empty();
+    }
+
+    public Set<Integer> getMeetTeams() {
+        Set<Integer> meetTeams = Sets.newHashSet();
+        meetTeams.addAll(getMeetTeamsForMeal(starterMeal));
+        meetTeams.addAll(getMeetTeamsForMeal(mainMeal));
+        meetTeams.addAll(getMeetTeamsForMeal(desertMeal));
+        meetTeams.remove(name);
+        return meetTeams;
+    }
+
+    private Set<Integer> getMeetTeamsForMeal(Optional<Meal> m) {
+        Set<Integer> meetTeams = Sets.newHashSet();
+        if (m.isPresent()) {
+            meetTeams.addAll(m.get().getGuests());
+            meetTeams.add(m.get().getCook());
+        }
+        return meetTeams;
     }
 }

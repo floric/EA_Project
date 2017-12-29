@@ -2,7 +2,6 @@ package org.floric.studies.evo.project2.model;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.MoreCollectors;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -107,7 +106,13 @@ public class Solution {
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
         for (Team t : getTeams()) {
-            stringBuilder.append(t.getName()).append(": ");
+            stringBuilder
+                    .append(t.getName())
+                    .append(" (meet ")
+                    .append(t.getMeetTeams().size())
+                    .append(" teams, ")
+                    .append(t.getCookMeal().isPresent() ? "cook" : "NO cook")
+                    .append("): ");
             List<Optional<Meal>> meals = Arrays.asList(t.getStarterMeal(), t.getMainMeal(), t.getDesertMeal());
             String mealsLine = meals.stream()
                     .map(m -> m.isPresent() ? m.get().toString() : "-")
