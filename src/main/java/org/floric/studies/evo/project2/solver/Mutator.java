@@ -14,7 +14,7 @@ public class Mutator {
 
     public Solution mutate(Solution s) {
         Random rnd = new Random();
-        List<Integer> newGen = s.getGenotype();
+        ImmutableList<Integer> newGen = s.getGenotype();
         int mutationsPerIndividuum = (int) (rnd.nextInt(newGen.size()) * 0.5);
         for (int i = 0; i < mutationsPerIndividuum; i++) {
             newGen = swapRandom(newGen);
@@ -23,7 +23,7 @@ public class Mutator {
         return Solution.fromGenotype(newGen);
     }
 
-    private List<Integer> swapRandom(List<Integer> s) {
+    private ImmutableList<Integer> swapRandom(ImmutableList<Integer> s) {
         Random rnd = new Random();
         int first = rnd.nextInt(s.size());
         int second = rnd.nextInt(s.size());
@@ -37,11 +37,11 @@ public class Mutator {
         int firstVal = s.get(first);
         int secondVal = s.get(second);
 
-        List<Integer> changed = setVal(s, firstVal, second);
+        ImmutableList<Integer> changed = setVal(s, firstVal, second);
         return setVal(changed, secondVal, first);
     }
 
-    private List<Integer> setVal(List<Integer> s, int newVal, int pos) {
+    private ImmutableList<Integer> setVal(ImmutableList<Integer> s, int newVal, int pos) {
         if (pos >= s.size()) {
             throw new RuntimeException("Illegal position");
         }
@@ -49,25 +49,25 @@ public class Mutator {
         List<Integer> strings = Lists.newArrayList(s).subList(0, pos);
         strings.add(newVal);
         strings.addAll(s.subList(pos + 1, s.size()));
-        return strings;
+        return ImmutableList.copyOf(strings);
     }
 
-    public static List<Integer> cyclicSwap(List<Integer> s) {
+    public static ImmutableList<Integer> cyclicSwap(ImmutableList<Integer> s) {
         Random rnd = new Random();
         return cyclicSwap(s, rnd.nextLong());
     }
 
-    public static List<Integer> changeCook(List<Integer> s) {
+    public static ImmutableList<Integer> changeCook(ImmutableList<Integer> s) {
         Random rnd = new Random();
         return changeCook(s, rnd.nextLong());
     }
 
-    public static List<Integer> changeGuest(List<Integer> s) {
+    public static ImmutableList<Integer> swapGuests(ImmutableList<Integer> s) {
         Random rnd = new Random();
-        return changeGuest(s, rnd.nextLong());
+        return swapGuests(s, rnd.nextLong());
     }
 
-    public static List<Integer> cyclicSwap(List<Integer> original, long seed) {
+    public static ImmutableList<Integer> cyclicSwap(ImmutableList<Integer> original, long seed) {
         List<Integer> s = Lists.newArrayList(original);
         Random rnd = new Random(seed);
 
@@ -117,7 +117,7 @@ public class Mutator {
         return ImmutableList.copyOf(s);
     }
 
-    public static List<Integer> changeCook(List<Integer> original, long seed) {
+    public static ImmutableList<Integer> changeCook(ImmutableList<Integer> original, long seed) {
         List<Integer> s = Lists.newArrayList(original);
         Random rnd = new Random(seed);
 
@@ -130,7 +130,7 @@ public class Mutator {
         return ImmutableList.copyOf(s);
     }
 
-    public static List<Integer> changeGuest(List<Integer> original, long seed) {
+    public static ImmutableList<Integer> swapGuests(ImmutableList<Integer> original, long seed) {
         List<Integer> s = Lists.newArrayList(original);
         Random rnd = new Random(seed);
 

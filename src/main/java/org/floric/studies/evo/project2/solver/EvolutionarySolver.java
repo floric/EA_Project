@@ -1,6 +1,8 @@
 package org.floric.studies.evo.project2.solver;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.floric.studies.evo.project2.model.Solution;
 
 import java.util.List;
@@ -10,69 +12,123 @@ import java.util.stream.Collectors;
 
 public class EvolutionarySolver {
 
+    public static final double SIMULATED_ANNEALING_SPEED = 0.999;
+
+    private Map<String, Integer> improvements = Maps.newHashMap();
+    private Map<String, Double> mutationProbability = Maps.newHashMap();
+    private long totalImprovements = 0L;
+    private long triedMutations = 0L;
+
     public EvolutionarySolver() {
     }
 
     public Solution solve(Map<Integer, Double[]> positions) {
         Evaluator ev = new Evaluator(positions);
-        int individualsCount = 10;
-        int iterations = 1000;
+        int individualsCount = 200;
+        int iterations = 10000;
         double bestValue = Double.MIN_VALUE;
         List<Integer> bestIndividuum = Lists.newArrayList();
 
         // start
-        List<List<Integer>> individuals = Lists.newArrayList();
+        List<ImmutableList<Integer>> individuals = Lists.newArrayList();
         for (int i = 0; i < individualsCount; i++) {
-            List<Integer> initialPermutation = Solution.generateRandomGenotype(positions.size());
+            ImmutableList<Integer> initialPermutation = Solution.generateRandomGenotype(positions.size());
             individuals.add(initialPermutation);
         }
 
+        initMutationProbabilities();
+
         // loop
         for (int i = 0; i < iterations; i++) {
-            // mutate
-            List<List<Integer>> mutated = Lists.newArrayList();
-            for (List<Integer> individuum : individuals) {
-                mutated.add(mutate(individuum));
-            }
-
             // evaluate
             List<Double> evaluations = Lists.newArrayList();
-            for (int j = 0; j < mutated.size(); j++) {
-                List<Integer> individuum = mutated.get(j);
+            List<Double> scores = Lists.newArrayList();
+            double currentMax = Double.MIN_VALUE;
+            for (int j = 0; j < individuals.size(); j++) {
+                ImmutableList<Integer> individuum = individuals.get(j);
                 double score = ev.evaluate(Solution.fromGenotype(individuum));
-                evaluations.add(score);
+                scores.add(score);
 
                 if (score > bestValue) {
                     bestValue = score;
                     bestIndividuum = individuum;
                 }
+                if (score > currentMax) {
+                    currentMax = score;
+                }
+            }
+
+            double minScore = bestValue * (0.99 + 0.01 * (1 - Math.pow(SIMULATED_ANNEALING_SPEED, i)));
+
+            for (int j = 0; j < individuals.size(); j++) {
+                double score = scores.get(j);
+                evaluations.add(Math.max(0.0, score - minScore));
             }
 
             // normalize scores for selection
-            double min = evaluations.stream().mapToDouble(val -> val).min().orElse(0.0);
-            double max = evaluations.stream().mapToDouble(val -> val).max().orElse(1.0);
-            double sum = evaluations.stream().mapToDouble(val -> val - min).sum();
-            double avg = evaluations.stream().mapToDouble(val -> val).average().orElse(0.0);
-            double variance = evaluations.stream().mapToDouble(val -> Math.pow((val - avg), 2.0)).sum() / evaluations.size();
+            double minEvalutations = evaluations.stream().mapToDouble(val -> val).min().orElse(0.0);
+            double maxEvaluations = evaluations.stream().mapToDouble(val -> val).max().orElse(1.0);
+            double sumEvalutations = evaluations.stream().mapToDouble(val -> val - minEvalutations).sum();
+            double avgEvaluations = evaluations.stream().mapToDouble(val -> val).average().orElse(0.0);
+            double varianceEvalutations = evaluations.stream().mapToDouble(val -> Math.pow((val - avgEvaluations), 2.0)).sum() / evaluations.size();
 
-            System.out.println(String.format("Avg: %f, Var: %f, Min: %f, Max: %f|%f", avg, variance, min, max, bestValue));
+            double minScores = scores.stream().mapToDouble(val -> val).min().orElse(0.0);
+            double maxScores = scores.stream().mapToDouble(val -> val).max().orElse(1.0);
+            double avgScores = scores.stream().mapToDouble(val -> val).average().orElse(0.0);
+            double varianceScores = scores.stream().mapToDouble(val -> Math.pow((val - avgScores), 2.0)).sum() / scores.size();
+
+            // System.out.println(String.format("Avg: %f, Var: %f, Min: %f, Max: %f|%f, Sum: %f, Minscore: %f", avgEvaluations, varianceEvalutations, minEvalutations, maxEvaluations, bestValue, sumEvalutations, minScore));
 
             for (int j = 0; j < evaluations.size(); j++) {
                 Double val = evaluations.get(j);
-                double fraction = sum == 0.0 ? 1.0 / evaluations.size() : ((val - min) / sum);
+                double fraction = sumEvalutations == 0.0 ? 0.0 : ((val - minEvalutations) / sumEvalutations);
                 evaluations.set(j, fraction);
             }
-            System.out.println(evaluations.stream().map(val -> val * 100.0).collect(Collectors.toList()));
+
+            // if border of annealing is hit, use best individuum to continue
+            if (sumEvalutations == 0.0) {
+                for (int j = 0; j < scores.size(); j++) {
+                    if (scores.get(j) == maxScores) {
+                        evaluations.set(j, 1.0);
+                    }
+                }
+            }
+
+            if (i % 100 == 0) {
+                System.out.println(evaluations.stream().map(val -> val * 100.0).collect(Collectors.toList()));
+            }
 
             // select
+            List<ImmutableList<Integer>> tmp = ImmutableList.copyOf(individuals);
             individuals.clear();
             for (int j = 0; j < individualsCount; j++) {
                 int selectIndex = select(evaluations);
-                individuals.add(mutated.get(selectIndex));
+                individuals.add(tmp.get(selectIndex));
+            }
+
+            // mutate
+            tmp = ImmutableList.copyOf(individuals);
+            individuals.clear();
+            for (ImmutableList<Integer> individuum : tmp) {
+                individuals.add(mutate(individuum, ev));
+            }
+
+            if (i % 100 == 0) {
+                mutationProbability.entrySet().forEach(entry -> {
+                    double newProbability = (3 * entry.getValue() + getImprovementsCount(entry.getKey()) / (double) totalImprovements) / 4.0;
+                    mutationProbability.put(entry.getKey(), newProbability);
+                });
+                System.out.println(String.format("%s: min: %f, best: %f, success: %f", i, minScore, bestValue,(double) totalImprovements * 100.0 / triedMutations));
             }
         }
 
         return null;
+    }
+
+    private void initMutationProbabilities() {
+        mutationProbability.put("cyclicSwap", 1.0 / 3);
+        mutationProbability.put("changeCook", 1.0 / 3);
+        mutationProbability.put("swapGuests", 1.0 / 3);
     }
 
     private int select(List<Double> evaluations) {
@@ -90,22 +146,44 @@ public class EvolutionarySolver {
         return evaluations.size() - 1;
     }
 
-    private List<Integer> mutate(List<Integer> individuum) {
+    private ImmutableList<Integer> mutate(ImmutableList<Integer> individuum, Evaluator ev) {
         Random rnd = new Random();
         double mutationVal = rnd.nextDouble();
 
-        if (mutationVal < 0.8) {
+        double oldScore = ev.evaluate(Solution.fromGenotype(individuum));
+        String mutationType = "";
+        double cyclicSwapPro = mutationProbability.get("cyclicSwap");
+        double changeCookPro = mutationProbability.get("changeCook");
+        double swapGuestsPro = mutationProbability.get("swapGuests");
+
+        if (mutationVal < cyclicSwapPro) {
             for (int i = 0; i < rnd.nextInt(9) + 1; i++) {
                 individuum = Mutator.cyclicSwap(individuum);
             }
-        } else if (mutationVal < 0.9) {
-            for (int i = 0; i < rnd.nextInt(2) + 1; i++) {
+            mutationType = "cyclicSwap";
+        } else if (mutationVal < changeCookPro + cyclicSwapPro) {
+            for (int i = 0; i < 2; i++) {
                 individuum = Mutator.changeCook(individuum);
             }
+            mutationType = "changeCook";
         } else {
-            individuum = Mutator.changeGuest(individuum);
+            individuum = Mutator.swapGuests(individuum);
+            mutationType = "swapGuests";
         }
 
+        double newScore = ev.evaluate(Solution.fromGenotype(individuum));
+        if (newScore > oldScore) {
+            int improvementsForType = getImprovementsCount(mutationType) + 1;
+            improvements.put(mutationType, improvementsForType);
+            totalImprovements++;
+        }
+
+        triedMutations++;
+
         return individuum;
+    }
+
+    private int getImprovementsCount(String mutationType) {
+        return improvements.containsKey(mutationType) ? improvements.get(mutationType) : 0;
     }
 }

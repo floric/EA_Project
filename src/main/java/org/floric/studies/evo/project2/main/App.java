@@ -1,5 +1,6 @@
 package org.floric.studies.evo.project2.main;
 
+import com.google.common.collect.ImmutableList;
 import org.floric.studies.evo.project2.model.Solution;
 import org.floric.studies.evo.project2.solver.EvolutionarySolver;
 
@@ -17,7 +18,7 @@ public class App {
         Map<Integer, Double[]> positions = new HashMap<>();
         Random rnd = new Random(POSITIONS_SEED);
 
-        List<Integer> genotype = Solution.generateGenotype(TEAMS_COUNT);
+        ImmutableList<Integer> genotype = Solution.generateGenotype(TEAMS_COUNT);
         Solution start = Solution.fromGenotype(genotype);
 
         positions = generatePositions(TEAMS_COUNT, POSITIONS_SEED);
@@ -38,7 +39,7 @@ public class App {
         Map<Integer, Double[]> positions = new HashMap<>();
         Random rnd = new Random(seed);
 
-        List<Integer> genotype = Solution.generateGenotype(count);
+        ImmutableList<Integer> genotype = Solution.generateGenotype(count);
         Solution start = Solution.fromGenotype(genotype);
 
         // generate random positions, can be replaced with real data

@@ -2,6 +2,7 @@ package org.floric.studies.evo.project2.model;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.MoreCollectors;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -9,7 +10,7 @@ import java.util.stream.IntStream;
 
 public class Solution {
 
-    private List<Integer> genotype = Lists.newArrayList();
+    private ImmutableList<Integer> genotype = ImmutableList.of();
     private double score = 0.0;
 
     private Solution() {
@@ -19,22 +20,22 @@ public class Solution {
         this.genotype = generateGenotype(count);
     }
 
-    public static Solution fromGenotype(List<Integer> genotype) {
+    public static Solution fromGenotype(ImmutableList<Integer> genotype) {
         Solution s = new Solution();
         s.setGenotype(genotype);
         s.setScore(0.0);
         return s;
     }
 
-    public static List<Integer> generateGenotype(int count) {
+    public static ImmutableList<Integer> generateGenotype(int count) {
         List<Integer> genotype = Lists.newArrayList();
         for (int i = 0; i < 3; i++) {
             genotype.addAll(generatePartOfGenotype(count));
         }
-        return genotype;
+        return ImmutableList.copyOf(genotype);
     }
 
-    public static List<Integer> generateRandomGenotype(int count) {
+    public static ImmutableList<Integer> generateRandomGenotype(int count) {
         List<Integer> genotype = Lists.newArrayList();
         for (int i = 0; i < 3; i++) {
             genotype.addAll(generateRandomPartOfGenotype(count));
@@ -42,21 +43,21 @@ public class Solution {
         return ImmutableList.copyOf(genotype);
     }
 
-    private static List<Integer> generatePartOfGenotype(int count) {
-        return IntStream.range(0, count).boxed().collect(Collectors.toList());
+    private static ImmutableList<Integer> generatePartOfGenotype(int count) {
+        return ImmutableList.copyOf(IntStream.range(0, count).boxed().collect(Collectors.toList()));
     }
 
-    private static List<Integer> generateRandomPartOfGenotype(int count) {
-        List<Integer> list = generatePartOfGenotype(count);
-        Collections.shuffle(list);
+    private static ImmutableList<Integer> generateRandomPartOfGenotype(int count) {
+        ImmutableList<Integer> list = generatePartOfGenotype(count);
+        Collections.shuffle(Lists.newArrayList(list));
         return ImmutableList.copyOf(list);
     }
 
-    public List<Integer> getGenotype() {
+    public ImmutableList<Integer> getGenotype() {
         return this.genotype;
     }
 
-    private void setGenotype(List<Integer> gen) {
+    private void setGenotype(ImmutableList<Integer> gen) {
         this.genotype = gen;
     }
 
