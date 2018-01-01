@@ -4,13 +4,18 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import org.floric.studies.evo.project2.io.ExportResult;
 import org.floric.studies.evo.project2.model.Solution;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.OpenOption;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class EvolutionarySolver {
 
@@ -25,10 +30,11 @@ public class EvolutionarySolver {
 
     public Solution solve(Map<Integer, Double[]> positions) {
         Evaluator ev = new Evaluator(positions);
-        int individualsCount = 100;
-        int iterations = 1000;
+        int individualsCount = 80;
+        int iterations = 10000;
         double bestValue = Double.MIN_VALUE;
         ImmutableList<Integer> bestIndividuum = ImmutableList.of();
+        ExportResult result = new ExportResult();
 
         // start
         List<ImmutableList<Integer>> individuals = Lists.newArrayList();
@@ -53,13 +59,17 @@ public class EvolutionarySolver {
                 if (score > bestValue) {
                     bestValue = score;
                     bestIndividuum = individuum;
+                    Solution s = Solution.fromGenotype(bestIndividuum);
+                    System.out.println(String.format("New Score: %f, distance: %f", bestValue, ev.getTotalDistance(s.getTeams())));
+                    result.getSolutions().put(i, bestIndividuum);
                 }
                 if (score > currentMax) {
                     currentMax = score;
                 }
             }
 
-            double minScore = bestValue * (0.995 + 0.005 * (1 - Math.pow(SIMULATED_ANNEALING_SPEED, i)));
+            double minScore = (0.3 * bestValue + bestValue * 0.1 * (1 - Math.pow(SIMULATED_ANNEALING_SPEED, i)));
+            result.getMinScore().add(minScore);
 
             for (int j = 0; j < individuals.size(); j++) {
                 double score = scores.get(j);
@@ -68,15 +78,11 @@ public class EvolutionarySolver {
 
             // normalize scores for selection
             double minEvalutations = evaluations.stream().mapToDouble(val -> val).min().orElse(0.0);
-            double maxEvaluations = evaluations.stream().mapToDouble(val -> val).max().orElse(1.0);
             double sumEvalutations = evaluations.stream().mapToDouble(val -> val - minEvalutations).sum();
-            double avgEvaluations = evaluations.stream().mapToDouble(val -> val).average().orElse(0.0);
-            double varianceEvalutations = evaluations.stream().mapToDouble(val -> Math.pow((val - avgEvaluations), 2.0)).sum() / evaluations.size();
 
-            double minScores = scores.stream().mapToDouble(val -> val).min().orElse(0.0);
             double maxScores = scores.stream().mapToDouble(val -> val).max().orElse(1.0);
             double avgScores = scores.stream().mapToDouble(val -> val).average().orElse(0.0);
-            double varianceScores = scores.stream().mapToDouble(val -> Math.pow((val - avgScores), 2.0)).sum() / scores.size();
+            result.getAvgScore().add(avgScores);
 
             for (int j = 0; j < evaluations.size(); j++) {
                 Double val = evaluations.get(j);
@@ -120,9 +126,20 @@ public class EvolutionarySolver {
                 });
                 System.out.println(String.format("%s: min: %f, best: %f; valid individuums: %d", i, minScore, bestValue, validIndividuums));
             }
+            result.getScore().add(bestValue);
         }
 
-        System.out.println(Solution.fromGenotype(bestIndividuum).toString());
+        Solution s = Solution.fromGenotype(bestIndividuum);
+        System.out.println(String.format("Solution:\n%s", s));
+        System.out.println(String.format("Distance: %f", ev.getTotalDistance(s.getTeams())));
+
+        Gson gson = new Gson();
+        String output = gson.toJson(result);
+        try {
+            Files.write(Paths.get("./results-spa/app/src/result.json"), output.getBytes());
+        } catch (IOException e) {
+            System.out.println("Write exception!");
+        }
 
         return null;
     }
@@ -156,7 +173,6 @@ public class EvolutionarySolver {
         String mutationType = "";
         double cyclicSwapPro = mutationProbability.get("cyclicSwap");
         double changeCookPro = mutationProbability.get("changeCook");
-        double swapGuestsPro = mutationProbability.get("swapGuests");
 
         if (mutationVal < cyclicSwapPro) {
             for (int i = 0; i < rnd.nextInt(3) + 1; i++) {

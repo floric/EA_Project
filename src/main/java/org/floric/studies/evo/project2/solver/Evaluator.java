@@ -54,7 +54,7 @@ public class Evaluator {
         // minimal distance to travel for each team
         if (positions.size() > 0) {
             double totalDistance = getTotalDistance(teams);
-            score = score + (teams.size() * 5 / totalDistance);
+            score = score + (teams.size() * 50 / totalDistance);
         }
 
         return score;

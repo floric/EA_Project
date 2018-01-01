@@ -12,7 +12,7 @@ import java.util.Random;
 public class App {
 
     public static final long POSITIONS_SEED = 123L;
-    public static final int TEAMS_COUNT = 27;
+    public static final int TEAMS_COUNT = 18;
 
     public static void main(String[] args) {
         Map<Integer, Double[]> positions = new HashMap<>();

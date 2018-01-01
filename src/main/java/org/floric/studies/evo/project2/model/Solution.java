@@ -105,7 +105,8 @@ public class Solution {
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        for (Team t : getTeams()) {
+        List<Team> teamsSortedByName = getTeams().stream().sorted((a, b) -> a.getName() - b.getName()).collect(Collectors.toList());
+        for (Team t : teamsSortedByName) {
             stringBuilder
                     .append(t.getName())
                     .append(" (meet ")
