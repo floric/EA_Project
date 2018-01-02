@@ -9,10 +9,12 @@ import java.util.Map;
 
 @Data
 public class ExportResult {
+    private int individualsCount = 0;
     private List<Double> score = Lists.newLinkedList();
     private List<Double> validIndividuumsRatio = Lists.newLinkedList();
     private List<Double> avgScore = Lists.newLinkedList();
     private List<Double> minScore = Lists.newLinkedList();
     private List<Integer> bestIndividuum = Lists.newLinkedList();
     private Map<Integer, List<Integer>> solutions = Maps.newHashMap();
+    private Map<Integer, Double[]> positions = Maps.newHashMap();
 }

@@ -18,10 +18,13 @@ import java.util.Set;
 
 public class EvolutionarySolver {
 
-    private static final double SIMULATED_ANNEALING_SPEED = 0.9997;
+    private static final double SIMULATED_ANNEALING_SPEED = 0.999;
     private static final int MUTATION_WEIGHT_INFLUENCE = 4;
     private static final double ANNEALING_BORDER_DROP_FACTOR = 0.95;
     private static final double ANNEALING_BORDER_MIN_SCORE = 0.3;
+    private static final double ANNEALING_BORDER_MAX_FACTOR = 0.95;
+    private static final int ITERATIONS_UNTIL_MUTATION_WEIGHTS_ADJUST = 500;
+    private static final int ITERATIONS_TO_EXPORT_RESULT = 2000;
 
     private Map<String, Integer> improvements = Maps.newHashMap();
     private Map<String, Double> mutationWeights = Maps.newHashMap();
@@ -34,7 +37,7 @@ public class EvolutionarySolver {
     public Solution solve(Map<Integer, Double[]> positions) {
         Evaluator ev = new Evaluator(positions);
         int individualsCount = 80;
-        int iterations = 20000;
+        int iterations = 100000;
         double bestValue = Double.MIN_VALUE;
         double minScore = 0.0;
         double scoreFraction = ANNEALING_BORDER_MIN_SCORE;
@@ -43,12 +46,9 @@ public class EvolutionarySolver {
         result = new ExportResult();
 
         // start
-        List<ImmutableList<Integer>> individuals = Lists.newArrayList();
-        for (int i = 0; i < individualsCount; i++) {
-            ImmutableList<Integer> initialPermutation = Solution.generateRandomGenotype(positions.size());
-            individuals.add(initialPermutation);
-        }
-
+        result.setIndividualsCount(individualsCount);
+        result.setPositions(positions);
+        List<ImmutableList<Integer>> individuals = initIndividuums(individualsCount, positions);
         initMutationProbabilities();
 
         // loop
@@ -56,7 +56,8 @@ public class EvolutionarySolver {
             // evaluate
             List<Double> evaluations = Lists.newArrayList();
             List<Double> scores = Lists.newArrayList();
-            double currentMax = Double.MIN_VALUE;
+
+            // check individuals, if they are better then existing best one
             for (int j = 0; j < individuals.size(); j++) {
                 ImmutableList<Integer> individuum = individuals.get(j);
                 double score = ev.evaluate(Solution.fromGenotype(individuum));
@@ -68,16 +69,15 @@ public class EvolutionarySolver {
                     bestValueIteration = i;
                     scoreFraction = minScore * ANNEALING_BORDER_DROP_FACTOR / bestValue;
                     Solution s = Solution.fromGenotype(bestIndividuum);
-                    System.out.println(String.format("New Score: %f, distance: %f", bestValue, ev.getTotalDistance(s.getTeams())));
+                    double totalDistance = ev.getTotalDistance(s.getTeams());
+                    System.out.println(String.format("New Score: %f, distance: %f", bestValue, totalDistance));
                     result.getSolutions().put(i, bestIndividuum);
                     result.setBestIndividuum(bestIndividuum);
                 }
-                if (score > currentMax) {
-                    currentMax = score;
-                }
             }
 
-            minScore = bestValue * (scoreFraction + (1.0 - scoreFraction) * (1 - Math.pow(SIMULATED_ANNEALING_SPEED, i - bestValueIteration)));
+            // set min score border of annealing
+            minScore = bestValue * ANNEALING_BORDER_MAX_FACTOR * (scoreFraction + (1.0 - scoreFraction) * (1 - Math.pow(SIMULATED_ANNEALING_SPEED, i - bestValueIteration)));
             result.getMinScore().add(minScore);
 
             for (int j = 0; j < individuals.size(); j++) {
@@ -132,17 +132,18 @@ public class EvolutionarySolver {
             result.getValidIndividuumsRatio().add((double) validIndividuums / evaluations.size());
 
             // modify mutation weights
-            if (i % 100 == 0) {
+            if (i % ITERATIONS_UNTIL_MUTATION_WEIGHTS_ADJUST == 0) {
                 modifyMutationWeights();
                 System.out.println(String.format("%s: min: %f, best: %f; valid individuums: %d", i, minScore, bestValue, validIndividuums));
             }
             // export progress to file
-            if (i % 500 == 0) {
+            if (i % ITERATIONS_TO_EXPORT_RESULT == 0) {
                 exportProgress();
             }
             result.getScore().add(bestValue);
         }
 
+        exportProgress();
         printSolution(bestIndividuum, ev);
 
         return null;
@@ -178,6 +179,15 @@ public class EvolutionarySolver {
         mutationWeights.put("swapGuests", 1.0 / 3);
     }
 
+    private List<ImmutableList<Integer>> initIndividuums(int count, Map<Integer, Double[]> positions) {
+        List<ImmutableList<Integer>> individuals = Lists.newArrayList();
+        for (int i = 0; i < count; i++) {
+            ImmutableList<Integer> initialPermutation = Solution.generateRandomGenotype(positions.size());
+            individuals.add(initialPermutation);
+        }
+        return individuals;
+    }
+
     private int select(List<Double> evaluations) {
         Random rnd = new Random();
         double val = rnd.nextDouble();
@@ -203,7 +213,7 @@ public class EvolutionarySolver {
         double changeCookPro = mutationWeights.get("changeCook");
 
         if (mutationVal < cyclicSwapPro) {
-            for (int i = 0; i < rnd.nextInt(3) + 1; i++) {
+            for (int i = 0; i < rnd.nextInt(5) + 1; i++) {
                 individuum = Mutator.cyclicSwap(individuum);
             }
             mutationType = "cyclicSwap";

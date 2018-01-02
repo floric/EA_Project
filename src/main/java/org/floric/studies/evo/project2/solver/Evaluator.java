@@ -90,6 +90,8 @@ public class Evaluator {
                 }
             }
 
+            // no return journey included, because sometimes with after party or going home
+
             totalDistance += getDistanceForRoute(route);
         }
 

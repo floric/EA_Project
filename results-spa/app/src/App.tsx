@@ -41,7 +41,7 @@ class App extends React.Component<{}, AppState> {
       showValidIndividuumsRatio: false,
       showMin: true,
       iterationsMin: 0,
-      iterationsMax: result.score.length - 1
+      iterationsMax: result.score.length === 0 ? 1 : result.score.length
     });
   }
 
@@ -50,10 +50,10 @@ class App extends React.Component<{}, AppState> {
 
     return (
       <div className="App">
-        <h3>Result for {iterationsCount} iterations</h3>
+        <h3>Solution after {iterationsCount} iterations</h3>
         <div className="divider" />
         <h4>Best permutation</h4>
-        <Text>Score: {result.score[iterationsCount - 1]}</Text>
+        <Text><strong>Score:</strong> {result.score[iterationsCount - 1]} | <strong>Individuals:</strong> {result.individualsCount}</Text>
         <Text className="pt-text-muted">
           [{result.bestIndividuum.join(', ')}]
         </Text>
@@ -123,7 +123,7 @@ class App extends React.Component<{}, AppState> {
                 className="pt-fixed"
                 placeholder="Minimum iteration"
                 min={0}
-                max={this.state.iterationsMax - 1}
+                max={this.state.iterationsMax}
                 value={this.state.iterationsMin}
                 onValueChange={val =>
                   this.setState({
@@ -134,8 +134,8 @@ class App extends React.Component<{}, AppState> {
               <NumericInput
                 className="pt-fixed"
                 placeholder="Maximum iteration"
-                min={this.state.iterationsMin + 1}
-                max={result.score.length - 1}
+                min={this.state.iterationsMin}
+                max={result.score.length === 0 ? this.state.iterationsMin + 1 : result.score.length}
                 onValueChange={val =>
                   this.setState({
                     iterationsMax: val

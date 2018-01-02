@@ -38,7 +38,7 @@ export class PositionsMap extends React.Component<
     });
     setInterval(() => {
       this.increaseTime();
-    }, 100);
+    }, 150);
   }
 
   increaseTime = () => {
@@ -68,6 +68,8 @@ export class PositionsMap extends React.Component<
       const teamWay = [];
       const teamPos = homePos[teamIndex];
       teamWay.push(teamPos);
+      teamWay.push(teamPos); // add twice for short break
+
       positionChanges.set(teamIndex, teamWay);
     }
 
@@ -77,10 +79,10 @@ export class PositionsMap extends React.Component<
       mealIndex < bestIndividuum.length / 3;
       mealIndex++
     ) {
-      const meal = bestIndividuum.slice(mealIndex * 3, 99);
+      const meal = bestIndividuum.slice(mealIndex * 3, mealIndex * 3 + 3);
       const cookIndex = meal[0];
       const cookPos = homePos[cookIndex];
-      const guestIndices = meal.slice(1, 3);
+      const guestIndices = meal.slice(1);
       guestIndices.forEach(teamIndex => {
         const teamWay = positionChanges.get(teamIndex) || [];
         teamWay.push(cookPos);
@@ -100,8 +102,9 @@ export class PositionsMap extends React.Component<
       positionChanges.set(teamIndex, teamWay);
     }
 
-    const mealTransitionIndex = Math.floor(this.state.time * 4.0);
-    const mealTransitionTime = this.state.time * 4.0 - mealTransitionIndex;
+    // 5.0, because 5 values per way
+    const mealTransitionIndex = Math.floor(this.state.time * 5.0);
+    const mealTransitionTime = this.state.time * 5.0 - mealTransitionIndex;
 
     const changePosData = Array.from(positionChanges.keys()).map(teamIndex =>
       lerp(
@@ -172,12 +175,14 @@ export class PositionsMap extends React.Component<
         <Text>
           <strong>Current Meal:</strong>{' '}
           {mealTransitionIndex === 0
-            ? 'Home to Starter'
-            : mealTransitionIndex === 1
-              ? 'Start to Main'
+            ? 'Home'
+              : mealTransitionIndex === 1
+              ? 'Home to Starter'
               : mealTransitionIndex === 2
-                ? 'Main to Dessert'
-                : 'Dessert to Home'}{' '}
+                ? 'Start to Main'
+                : mealTransitionIndex === 3
+                  ? 'Main to Dessert'
+                  : 'Dessert to Home'}{' '}
           | <strong>Distance:</strong> {distances}
         </Text>
         <Scatter data={data} options={options} />

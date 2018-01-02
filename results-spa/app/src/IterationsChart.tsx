@@ -39,19 +39,19 @@ export class IterationsChart extends React.Component<
     } = this.props;
 
     const iterationsCount = result.score.length;
-    const detail = Math.floor(iterationsCount / 1000);
+    const detail = Math.floor(Math.min(iterationsCount, iterationsMax - iterationsMin) / 1000);
     const bestValues = result.score
       .slice(iterationsMin, iterationsMax)
-      .filter((val, i) => i % detail === 0);
+      .filter((val, i) => detail > 0 ? i % detail === 0 : true);
     const avgValues = result.avgScore
       .slice(iterationsMin, iterationsMax)
-      .filter((val, i) => i % detail === 0);
+      .filter((val, i) => detail > 0 ? i % detail === 0 : true);
     const minValues = result.minScore
       .slice(iterationsMin, iterationsMax)
-      .filter((val, i) => i % detail === 0);
+      .filter((val, i) => detail > 0 ? i % detail === 0 : true);
     const validIndividuumsRatios = result.validIndividuumsRatio
       .slice(iterationsMin, iterationsMax)
-      .filter((val, i) => i % detail === 0);
+      .filter((val, i) => detail > 0 ? i % detail === 0 : true);
 
     const data: ChartData<any> = {
       labels: bestValues.map((val, i) => (i * detail).toString()),

@@ -47,9 +47,9 @@ public class Solution {
     }
 
     private static ImmutableList<Integer> generateRandomPartOfGenotype(int count) {
-        ImmutableList<Integer> list = generatePartOfGenotype(count);
-        Collections.shuffle(Lists.newArrayList(list));
-        return ImmutableList.copyOf(list);
+        ArrayList<Integer> shuffledList = Lists.newArrayList(generatePartOfGenotype(count));
+        Collections.shuffle(shuffledList);
+        return ImmutableList.copyOf(shuffledList);
     }
 
     public ImmutableList<Integer> getGenotype() {

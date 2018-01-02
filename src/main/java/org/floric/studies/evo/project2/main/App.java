@@ -12,11 +12,10 @@ import java.util.Random;
 public class App {
 
     public static final long POSITIONS_SEED = 123L;
-    public static final int TEAMS_COUNT = 18;
+    public static final int TEAMS_COUNT = 54;
 
     public static void main(String[] args) {
-        Map<Integer, Double[]> positions = new HashMap<>();
-        Random rnd = new Random(POSITIONS_SEED);
+        Map<Integer, Double[]> positions;
 
         ImmutableList<Integer> genotype = Solution.generateGenotype(TEAMS_COUNT);
         Solution start = Solution.fromGenotype(genotype);
