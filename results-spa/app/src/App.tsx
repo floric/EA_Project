@@ -1,66 +1,130 @@
 import * as React from 'react';
-import { Line } from 'react-chartjs-2';
+import { Text, Checkbox, RangeSlider, Icon } from '@blueprintjs/core';
+import { IterationsChart } from './IterationsChart';
+
 import './App.css';
 
-interface ExportResult {
-  score: Array<Number>;
-  avgScore: Array<Number>;
-  minScore: Array<Number>;
-  solutions: { [key: string]: Array<Number> };
+export interface ExportResult {
+  score: Array<number>;
+  avgScore: Array<number>;
+  minScore: Array<number>;
+  validIndividuumsRatio: Array<number>;
+  bestIndividuum: Array<number>;
+  solutions: { [key: string]: Array<number> };
+}
+
+interface AppState {
+  showAvg: boolean;
+  showMin: boolean;
+  showValidIndividuumsRatio: boolean;
+  showBest: boolean;
+  iterationsMin: number;
+  iterationsMax: number;
 }
 
 const result = require('./result.json') as ExportResult;
-const displayEnd = 10000;
 
-class App extends React.Component {
+class App extends React.Component<{}, AppState> {
+  componentWillMount() {
+    this.setState({
+      showAvg: true,
+      showBest: true,
+      showValidIndividuumsRatio: false,
+      showMin: true,
+      iterationsMin: 0,
+      iterationsMax: 50000
+    });
+  }
+
   render() {
-    const bestValues = result.score.slice(0, displayEnd);
-    const avgValues = result.avgScore.slice(0, displayEnd);
-    const minima = result.minScore.slice(0, displayEnd);
+    const iterationsCount = result.score.length;
 
     return (
       <div className="App">
-        <Line
-          data={{
-            labels: bestValues.map((val, i) => (i % 100 !== 0 ? '' : i)),
-            datasets: [
-              {
-                label: 'Best',
-                data: bestValues,
-                steppedLine: true,
-                pointRadius: 0
-              },
-              {
-                label: 'Average',
-                data: avgValues,
-                steppedLine: true,
-                pointRadius: 0,
-                borderColor: 'blue'
-              },
-
-              {
-                label: 'Minimum',
-                data: minima,
-                steppedLine: true,
-                pointRadius: 0,
-                borderColor: 'red'
-              }
-            ]
-          }}
-          options={{
-            legend: {
-              display: false
-            },
-            elements: {
-              line: {
-                cubicInterpolationMode: 'monotone'
-              }
-            },
-            scales: {
-              yAxes: []
+        <h3>Result for {iterationsCount} iterations</h3>
+        <div className="divider" />
+        <h4>Best permutation</h4>
+        <Text>Score: {result.score[iterationsCount - 1]}</Text>
+        <Text className="pt-text-muted">
+          [{result.bestIndividuum.join(', ')}]
+        </Text>
+        <div className="divider" />
+        <h4>Optimization process</h4>
+        <div className="iterations-chart-options">
+          <Checkbox
+            checked={this.state.showMin}
+            onChange={ev =>
+              this.setState({ showMin: ev.currentTarget.checked })
             }
-          }}
-        />
+          >
+            Minimum score{' '}
+            <Icon
+              iconName="symbol-circle"
+              iconSize={Icon.SIZE_LARGE}
+              className="min-line"
+            />
+          </Checkbox>
+          <Checkbox
+            checked={this.state.showAvg}
+            onChange={ev =>
+              this.setState({ showAvg: ev.currentTarget.checked })
+            }
+          >
+            Average score{' '}
+            <Icon
+              iconName="symbol-circle"
+              iconSize={Icon.SIZE_LARGE}
+              className="avg-line"
+            />
+          </Checkbox>
+          <Checkbox
+            checked={this.state.showValidIndividuumsRatio}
+            onChange={ev =>
+              this.setState({
+                showValidIndividuumsRatio: ev.currentTarget.checked
+              })
+            }
+          >
+            Valid individuums ratio{' '}
+            <Icon
+              iconName="symbol-circle"
+              iconSize={Icon.SIZE_LARGE}
+              className="individuums-ratio-line"
+            />
+          </Checkbox>
+          <Checkbox
+            checked={this.state.showBest}
+            onChange={ev =>
+              this.setState({ showBest: ev.currentTarget.checked })
+            }
+          >
+            <span>
+              Best score{' '}
+              <Icon
+                iconName="symbol-circle"
+                iconSize={Icon.SIZE_LARGE}
+                className="best-line"
+              />
+            </span>
+          </Checkbox>
+        </div>
+        <div className="iterations-slider">
+          <Text>Iterations: </Text>
+          <RangeSlider
+            className="pt-fill"
+            min={0}
+            max={iterationsCount}
+            onRelease={val =>
+              this.setState({
+                iterationsMin: val[0],
+                iterationsMax: val[1]
+              })
+            }
+            value={[this.state.iterationsMin, this.state.iterationsMax]}
+          />
+        </div>
+
+        <IterationsChart {...this.state} result={result} />
       </div>
     );
   }

@@ -1,24 +1,36 @@
+@import url('../node_modules/@blueprintjs/core/dist/blueprint.css');
+/* ["#2965CC", "#29A634", "#D99E0B", "#D13913", "#8F398F", "#00B3A4", "#DB2C6F", "#9BBF30", "#96622D", "#7157D9"] */
+
 .App {
-  text-align: center;
+  padding: 2rem;
 }
 
-.App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 80px;
+.iterations-slider {
+  display: inline-block;
 }
 
-.App-header {
-  background-color: #222;
-  height: 150px;
-  padding: 20px;
-  color: white;
+.iterations-chart-options {
+  display: flex;
+  justify-content: space-between;
+  vertical-align: middle;
 }
 
-.App-intro {
-  font-size: large;
+.individuums-ratio-line {
+  color: #2965cc;
 }
 
-@keyframes App-logo-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+.avg-line {
+  color: #d99e0b;
+}
+
+.best-line {
+  color: #29a634;
+}
+
+.min-line {
+  color: #d13913;
+}
+
+.divider {
+  margin-bottom: 2rem;
 }

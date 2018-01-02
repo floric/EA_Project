@@ -8,6 +8,10 @@ import java.util.*;
 
 public class Evaluator {
     private Map<Integer, Double[]> positions = new HashMap<>();
+    private static final double COOK_INFLUENCE = 10.0;
+    private static final double MEALS_INFLUENCE = 10.0;
+    private static final double TEAMS_INFLUENCE = 1.0;
+    private static final double BASIC_SCORE_EXPONENT = 100.0;
 
     public Evaluator(Map<Integer, Double[]> positions) {
         this.positions = positions;
@@ -19,10 +23,11 @@ public class Evaluator {
         // forced
         // every team is once a cook
         Set<Team> teams = s.getTeams();
+        int teamsCount = teams.size();
         for (Team t : teams) {
             Optional<Meal> cookMeal = t.getCookMeal();
             if (cookMeal.isPresent()) {
-                score += 10;
+                score += COOK_INFLUENCE;
             }
         }
 
@@ -31,31 +36,24 @@ public class Evaluator {
             List<Optional<Meal>> meals = Arrays.asList(t.getStarterMeal(), t.getMainMeal(), t.getDesertMeal());
             for (Optional<Meal> meal : meals) {
                 if (meal.isPresent()) {
-                    score += 10;
+                    score += MEALS_INFLUENCE;
                 }
             }
         }
 
         // possible
-        // every team meets 7 other teams during lunches
+        // every team meets 6 other teams during lunches
         for (Team t : teams) {
-            Set<Integer> meetTeams = new HashSet<>();
-            List<Optional<Meal>> meals = Arrays.asList(t.getStarterMeal(), t.getMainMeal(), t.getDesertMeal());
-            for (Optional<Meal> meal : meals) {
-                if (meal.isPresent()) {
-                    meetTeams.addAll(meal.get().getGuests());
-                    meetTeams.add(meal.get().getCook());
-                }
-            }
-
-            score += meetTeams.size();
+            score += t.getMeetTeams().size() * TEAMS_INFLUENCE;
         }
+
+        double normalizedScore = 1.0 - (Math.abs((score / (teamsCount * (COOK_INFLUENCE + 3 * MEALS_INFLUENCE + 6 * TEAMS_INFLUENCE))) - 1.0));
 
         // minimal distance to travel for each team
-        if (positions.size() > 0) {
-            double totalDistance = getTotalDistance(teams);
-            score = score + (teams.size() * 50 / totalDistance);
-        }
+        double totalDistance = getTotalDistance(teams);
+        double normalizedDistance = 1.0 / (totalDistance / teamsCount);
+
+        score = Math.pow(normalizedScore, BASIC_SCORE_EXPONENT) * normalizedDistance;
 
         return score;
     }
@@ -72,10 +70,6 @@ public class Evaluator {
         }
 
         return distance;
-    }
-
-    public double getMaxScore(Solution s) {
-        return 47 * s.getTeamsCount() + 15;
     }
 
     public double getTotalDistance(Set<Team> teams) {

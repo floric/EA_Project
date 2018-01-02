@@ -10,7 +10,6 @@ import org.floric.studies.evo.project2.model.Solution;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +18,14 @@ import java.util.Set;
 
 public class EvolutionarySolver {
 
-    public static final double SIMULATED_ANNEALING_SPEED = 0.999;
+    private static final double SIMULATED_ANNEALING_SPEED = 0.9997;
+    private static final int MUTATION_WEIGHT_INFLUENCE = 4;
+    private static final double ANNEALING_BORDER_DROP_FACTOR = 0.95;
+    private static final double ANNEALING_BORDER_MIN_SCORE = 0.3;
 
     private Map<String, Integer> improvements = Maps.newHashMap();
-    private Map<String, Double> mutationProbability = Maps.newHashMap();
+    private Map<String, Double> mutationWeights = Maps.newHashMap();
+    private ExportResult result;
     private long totalImprovements = 0L;
 
     public EvolutionarySolver() {
@@ -31,10 +34,13 @@ public class EvolutionarySolver {
     public Solution solve(Map<Integer, Double[]> positions) {
         Evaluator ev = new Evaluator(positions);
         int individualsCount = 80;
-        int iterations = 10000;
+        int iterations = 20000;
         double bestValue = Double.MIN_VALUE;
+        double minScore = 0.0;
+        double scoreFraction = ANNEALING_BORDER_MIN_SCORE;
+        int bestValueIteration = 0;
         ImmutableList<Integer> bestIndividuum = ImmutableList.of();
-        ExportResult result = new ExportResult();
+        result = new ExportResult();
 
         // start
         List<ImmutableList<Integer>> individuals = Lists.newArrayList();
@@ -59,16 +65,19 @@ public class EvolutionarySolver {
                 if (score > bestValue) {
                     bestValue = score;
                     bestIndividuum = individuum;
+                    bestValueIteration = i;
+                    scoreFraction = minScore * ANNEALING_BORDER_DROP_FACTOR / bestValue;
                     Solution s = Solution.fromGenotype(bestIndividuum);
                     System.out.println(String.format("New Score: %f, distance: %f", bestValue, ev.getTotalDistance(s.getTeams())));
                     result.getSolutions().put(i, bestIndividuum);
+                    result.setBestIndividuum(bestIndividuum);
                 }
                 if (score > currentMax) {
                     currentMax = score;
                 }
             }
 
-            double minScore = (0.3 * bestValue + bestValue * 0.1 * (1 - Math.pow(SIMULATED_ANNEALING_SPEED, i)));
+            minScore = bestValue * (scoreFraction + (1.0 - scoreFraction) * (1 - Math.pow(SIMULATED_ANNEALING_SPEED, i - bestValueIteration)));
             result.getMinScore().add(minScore);
 
             for (int j = 0; j < individuals.size(); j++) {
@@ -118,21 +127,42 @@ public class EvolutionarySolver {
                 individuals.add(mutate(individuum, ev));
             }
 
+            // calculate ratio of individuums with score higher then annealing border
+            long validIndividuums = evaluations.stream().filter(val -> val > 0.0).count();
+            result.getValidIndividuumsRatio().add((double) validIndividuums / evaluations.size());
+
+            // modify mutation weights
             if (i % 100 == 0) {
-                long validIndividuums = evaluations.stream().filter(val -> val > 0.0).count();
-                mutationProbability.entrySet().forEach(entry -> {
-                    double newProbability = (3 * entry.getValue() + getImprovementsCount(entry.getKey()) / (double) totalImprovements) / 4.0;
-                    mutationProbability.put(entry.getKey(), newProbability);
-                });
+                modifyMutationWeights();
                 System.out.println(String.format("%s: min: %f, best: %f; valid individuums: %d", i, minScore, bestValue, validIndividuums));
+            }
+            // export progress to file
+            if (i % 500 == 0) {
+                exportProgress();
             }
             result.getScore().add(bestValue);
         }
 
+        printSolution(bestIndividuum, ev);
+
+        return null;
+    }
+
+    private void modifyMutationWeights() {
+        mutationWeights.forEach((key, value) -> {
+            double newWeight = ((MUTATION_WEIGHT_INFLUENCE - 1.0) * value + getImprovementsCount(key) / (double) totalImprovements) / MUTATION_WEIGHT_INFLUENCE;
+            mutationWeights.put(key, newWeight);
+        });
+    }
+
+    private void printSolution(ImmutableList<Integer> bestIndividuum, Evaluator ev) {
         Solution s = Solution.fromGenotype(bestIndividuum);
         System.out.println(String.format("Solution:\n%s", s));
         System.out.println(String.format("Distance: %f", ev.getTotalDistance(s.getTeams())));
+        System.out.println(bestIndividuum);
+    }
 
+    private void exportProgress() {
         Gson gson = new Gson();
         String output = gson.toJson(result);
         try {
@@ -140,14 +170,12 @@ public class EvolutionarySolver {
         } catch (IOException e) {
             System.out.println("Write exception!");
         }
-
-        return null;
     }
 
     private void initMutationProbabilities() {
-        mutationProbability.put("cyclicSwap", 1.0 / 3);
-        mutationProbability.put("changeCook", 1.0 / 3);
-        mutationProbability.put("swapGuests", 1.0 / 3);
+        mutationWeights.put("cyclicSwap", 1.0 / 3);
+        mutationWeights.put("changeCook", 1.0 / 3);
+        mutationWeights.put("swapGuests", 1.0 / 3);
     }
 
     private int select(List<Double> evaluations) {
@@ -171,8 +199,8 @@ public class EvolutionarySolver {
 
         double oldScore = ev.evaluate(Solution.fromGenotype(individuum));
         String mutationType = "";
-        double cyclicSwapPro = mutationProbability.get("cyclicSwap");
-        double changeCookPro = mutationProbability.get("changeCook");
+        double cyclicSwapPro = mutationWeights.get("cyclicSwap");
+        double changeCookPro = mutationWeights.get("changeCook");
 
         if (mutationVal < cyclicSwapPro) {
             for (int i = 0; i < rnd.nextInt(3) + 1; i++) {
