@@ -5,6 +5,23 @@
   padding: 2rem;
 }
 
+.iterations-borders {
+  display: inline-flex;
+  align-content: center;
+  align-items: center;
+}
+
+.chart-container {
+  display: flex;
+  flex-direction: column; /* make main axis vertical */
+  align-items: center;
+  width: 100%;
+}
+
+.chart {
+  width: 80%;
+}
+
 .iterations-slider {
   display: inline-block;
 }

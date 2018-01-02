@@ -1,16 +1,25 @@
 import * as React from 'react';
-import { Text, Checkbox, RangeSlider, Icon } from '@blueprintjs/core';
+import {
+  Text,
+  Checkbox,
+  Icon,
+  NumericInput,
+  ControlGroup
+} from '@blueprintjs/core';
 import { IterationsChart } from './IterationsChart';
 
 import './App.css';
+import { PositionsMap } from './PositionsMap';
 
 export interface ExportResult {
+  individualsCount: number;
   score: Array<number>;
   avgScore: Array<number>;
   minScore: Array<number>;
   validIndividuumsRatio: Array<number>;
   bestIndividuum: Array<number>;
   solutions: { [key: string]: Array<number> };
+  positions: { [key: string]: Array<number> };
 }
 
 interface AppState {
@@ -32,7 +41,7 @@ class App extends React.Component<{}, AppState> {
       showValidIndividuumsRatio: false,
       showMin: true,
       iterationsMin: 0,
-      iterationsMax: 50000
+      iterationsMax: result.score.length - 1
     });
   }
 
@@ -107,24 +116,48 @@ class App extends React.Component<{}, AppState> {
               />
             </span>
           </Checkbox>
+          <div className="iterations-borders">
+            <Text>Iterations:</Text>
+            <ControlGroup fill={true}>
+              <NumericInput
+                className="pt-fixed"
+                placeholder="Minimum iteration"
+                min={0}
+                max={this.state.iterationsMax - 1}
+                value={this.state.iterationsMin}
+                onValueChange={val =>
+                  this.setState({
+                    iterationsMin: val
+                  })
+                }
+              />
+              <NumericInput
+                className="pt-fixed"
+                placeholder="Maximum iteration"
+                min={this.state.iterationsMin + 1}
+                max={result.score.length - 1}
+                onValueChange={val =>
+                  this.setState({
+                    iterationsMax: val
+                  })
+                }
+                value={this.state.iterationsMax}
+              />
+            </ControlGroup>
+          </div>
         </div>
-        <div className="iterations-slider">
-          <Text>Iterations: </Text>
-          <RangeSlider
-            className="pt-fill"
-            min={0}
-            max={iterationsCount}
-            onRelease={val =>
-              this.setState({
-                iterationsMin: val[0],
-                iterationsMax: val[1]
-              })
-            }
-            value={[this.state.iterationsMin, this.state.iterationsMax]}
-          />
+        <div className="chart-container">
+          <div className="chart">
+            <IterationsChart {...this.state} result={result} />
+          </div>
         </div>
-
-        <IterationsChart {...this.state} result={result} />
+        <div className="divider" />
+        <h3>Positions</h3>
+        <div className="chart-container">
+          <div className="chart">
+            <PositionsMap result={result} />
+          </div>
+        </div>
       </div>
     );
   }
