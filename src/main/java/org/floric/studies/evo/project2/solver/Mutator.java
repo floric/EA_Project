@@ -2,43 +2,59 @@ package org.floric.studies.evo.project2.solver;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import org.floric.studies.evo.project2.model.Solution;
+import com.google.common.collect.Maps;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class Mutator {
     public Mutator() {
     }
 
-    public Solution mutate(Solution s) {
-        Random rnd = new Random();
-        ImmutableList<Integer> newGen = s.getGenotype();
-        int mutationsPerIndividuum = (int) (rnd.nextInt(newGen.size()) * 0.5);
-        for (int i = 0; i < mutationsPerIndividuum; i++) {
-            newGen = swapRandom(newGen);
-        }
-
-        return Solution.fromGenotype(newGen);
+    @Data
+    @AllArgsConstructor
+    class MutationResult {
+        private ImmutableList<Integer> individuum;
+        private String mutationType;
     }
 
-    private ImmutableList<Integer> swapRandom(ImmutableList<Integer> s) {
-        Random rnd = new Random();
-        int first = rnd.nextInt(s.size());
-        int second = rnd.nextInt(s.size());
+    public MutationResult mutate(ImmutableList<Integer> individuum) {
+        Map<String, Double> mutationWeights = Maps.newHashMap();
+        mutationWeights.put("cyclicSwap", 0.3333);
+        mutationWeights.put("changeCook", 0.3333);
+        mutationWeights.put("swapGuests", 0.3333);
 
-        if (first > second) {
-            int tmp = first;
-            first = second;
-            second = tmp;
+        return mutate(individuum, mutationWeights);
+    }
+
+    public MutationResult mutate(ImmutableList<Integer> individuum, Map<String, Double> mutationWeights) {
+        Random rnd = new Random();
+        double mutationVal = rnd.nextDouble();
+
+        String mutationType = "";
+        double cyclicSwapPro = mutationWeights.get("cyclicSwap");
+        double changeCookPro = mutationWeights.get("changeCook");
+
+        if (mutationVal < cyclicSwapPro) {
+            for (int i = 0; i < rnd.nextInt(5) + 1; i++) {
+                individuum = Mutator.cyclicSwap(individuum);
+            }
+            mutationType = "cyclicSwap";
+        } else if (mutationVal < changeCookPro + cyclicSwapPro) {
+            for (int i = 0; i < rnd.nextInt(2) + 1; i++) {
+                individuum = Mutator.changeCook(individuum);
+            }
+            mutationType = "changeCook";
+        } else {
+            individuum = Mutator.swapGuests(individuum);
+            mutationType = "swapGuests";
         }
 
-        int firstVal = s.get(first);
-        int secondVal = s.get(second);
-
-        ImmutableList<Integer> changed = setVal(s, firstVal, second);
-        return setVal(changed, secondVal, first);
+        return new MutationResult(individuum, mutationType);
     }
 
     private ImmutableList<Integer> setVal(ImmutableList<Integer> s, int newVal, int pos) {

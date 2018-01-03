@@ -22,7 +22,7 @@ public class EvolutionarySolver {
     private static final int MUTATION_WEIGHT_INFLUENCE = 4;
     private static final double ANNEALING_BORDER_DROP_FACTOR = 0.95;
     private static final double ANNEALING_BORDER_MIN_SCORE = 0.3;
-    private static final double ANNEALING_BORDER_MAX_FACTOR = 0.95;
+    private static final double ANNEALING_BORDER_MAX_FACTOR = 0.97;
     private static final int ITERATIONS_UNTIL_MUTATION_WEIGHTS_ADJUST = 500;
     private static final int ITERATIONS_TO_EXPORT_RESULT = 2000;
 
@@ -37,7 +37,7 @@ public class EvolutionarySolver {
     public Solution solve(Map<Integer, Double[]> positions) {
         Evaluator ev = new Evaluator(positions);
         int individualsCount = 80;
-        int iterations = 100000;
+        int iterations = 200000;
         double bestValue = Double.MIN_VALUE;
         double minScore = 0.0;
         double scoreFraction = ANNEALING_BORDER_MIN_SCORE;
@@ -204,37 +204,19 @@ public class EvolutionarySolver {
     }
 
     private ImmutableList<Integer> mutate(ImmutableList<Integer> individuum, Evaluator ev) {
-        Random rnd = new Random();
-        double mutationVal = rnd.nextDouble();
+        Mutator m = new Mutator();
+        Mutator.MutationResult result = m.mutate(individuum, mutationWeights);
 
         double oldScore = ev.evaluate(Solution.fromGenotype(individuum));
-        String mutationType = "";
-        double cyclicSwapPro = mutationWeights.get("cyclicSwap");
-        double changeCookPro = mutationWeights.get("changeCook");
+        double newScore = ev.evaluate(Solution.fromGenotype(result.getIndividuum()));
 
-        if (mutationVal < cyclicSwapPro) {
-            for (int i = 0; i < rnd.nextInt(5) + 1; i++) {
-                individuum = Mutator.cyclicSwap(individuum);
-            }
-            mutationType = "cyclicSwap";
-        } else if (mutationVal < changeCookPro + cyclicSwapPro) {
-            for (int i = 0; i < rnd.nextInt(2) + 1; i++) {
-                individuum = Mutator.changeCook(individuum);
-            }
-            mutationType = "changeCook";
-        } else {
-            individuum = Mutator.swapGuests(individuum);
-            mutationType = "swapGuests";
-        }
-
-        double newScore = ev.evaluate(Solution.fromGenotype(individuum));
         if (newScore > oldScore) {
-            int improvementsForType = getImprovementsCount(mutationType) + 1;
-            improvements.put(mutationType, improvementsForType);
+            int improvementsForType = getImprovementsCount(result.getMutationType()) + 1;
+            improvements.put(result.getMutationType(), improvementsForType);
             totalImprovements++;
         }
 
-        return individuum;
+        return result.getIndividuum();
     }
 
     private int getImprovementsCount(String mutationType) {

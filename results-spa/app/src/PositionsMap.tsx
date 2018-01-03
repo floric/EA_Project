@@ -1,11 +1,14 @@
 import * as React from 'react';
 import { Scatter, ChartData } from 'react-chartjs-2';
+import { hsl } from 'color';
 
 import { ExportResult } from './App';
 import { Text } from '@blueprintjs/core';
+import { ChartOptions } from 'chart.js';
 
 interface PositionsMapState {
   time: number;
+  colors: Array<string>;
 }
 
 interface PositionsMapProps {
@@ -24,6 +27,10 @@ const lerp = (a: Pos, b: Pos, val: number): Pos => {
   };
 };
 
+const randomColor = () => {
+  return hsl(Math.random() * 360, 100, 50);
+};
+
 const distanceBetween = (a: Pos, b: Pos) => {
   return Math.sqrt(Math.pow(a.x - b.x, 2.0) + Math.pow(a.y - b.y, 2.0));
 };
@@ -34,7 +41,10 @@ export class PositionsMap extends React.Component<
 > {
   componentWillMount() {
     this.setState({
-      time: 0.0
+      time: 0.0,
+      colors: Object.keys(this.props.result.positions).map(val =>
+        randomColor().toString()
+      )
     });
     setInterval(() => {
       this.increaseTime();
@@ -132,6 +142,8 @@ export class PositionsMap extends React.Component<
           borderColor: '#d99e0b'
         },
         {
+          pointBackgroundColor: this.state.colors,
+          pointBorderColor: this.state.colors,
           label: 'Teams',
           data: changePosData,
           borderColor: '#2965cc'
@@ -139,12 +151,15 @@ export class PositionsMap extends React.Component<
       ]
     };
 
-    const options = {
+    const options: ChartOptions = {
       animation: {
         duration: 0
       },
       legend: {
-        display: true
+        display: false
+      },
+      tooltips: {
+        mode: 'x'
       },
       scales: {
         yAxes: [
@@ -176,7 +191,7 @@ export class PositionsMap extends React.Component<
           <strong>Current Meal:</strong>{' '}
           {mealTransitionIndex === 0
             ? 'Home'
-              : mealTransitionIndex === 1
+            : mealTransitionIndex === 1
               ? 'Home to Starter'
               : mealTransitionIndex === 2
                 ? 'Start to Main'

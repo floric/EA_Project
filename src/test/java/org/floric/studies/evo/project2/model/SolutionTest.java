@@ -76,16 +76,4 @@ public class SolutionTest {
         assertTrue(teamOne.getCookMeal().isPresent());
         assertFalse(teamThree.getCookMeal().isPresent());
     }
-
-    @Test
-    public void getCopy() throws Exception {
-        Solution s = Solution.fromGenotype(ImmutableList.of(0,1,2,1,2,0,2,1,0));
-        Set<Team> teams = s.getTeams();
-
-        Solution copy = s.getCopy();
-        assertNotEquals(teams, copy.getTeams());
-        assertEquals(s.getGenotype(), copy.getGenotype());
-        assertEquals(s.getTeamsCount(), copy.getTeamsCount());
-    }
-
 }

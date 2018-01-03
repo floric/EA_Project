@@ -1,5 +1,6 @@
 package org.floric.studies.evo.project2.solver;
 
+import com.google.common.collect.ImmutableList;
 import org.floric.studies.evo.project2.model.Meal;
 import org.floric.studies.evo.project2.model.Solution;
 import org.floric.studies.evo.project2.model.Team;
@@ -15,6 +16,10 @@ public class Evaluator {
 
     public Evaluator(Map<Integer, Double[]> positions) {
         this.positions = positions;
+    }
+
+    public double evaluate(ImmutableList<Integer> s) {
+        return evaluate(Solution.fromGenotype(s));
     }
 
     public double evaluate(Solution s) {

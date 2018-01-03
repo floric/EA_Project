@@ -10,7 +10,6 @@ import java.util.stream.IntStream;
 public class Solution {
 
     private ImmutableList<Integer> genotype = ImmutableList.of();
-    private double score = 0.0;
 
     private Solution() {
     }
@@ -22,7 +21,6 @@ public class Solution {
     public static Solution fromGenotype(ImmutableList<Integer> genotype) {
         Solution s = new Solution();
         s.setGenotype(genotype);
-        s.setScore(0.0);
         return s;
     }
 
@@ -92,12 +90,6 @@ public class Solution {
         return genotype.size() / 3;
     }
 
-    public Solution getCopy() {
-        Solution solution = Solution.fromGenotype(this.genotype);
-        solution.setScore(this.score);
-        return solution;
-    }
-
     public Optional<Team> getTeam(int name) {
         return getTeams().stream().filter(t -> t.getName() == name).findFirst();
     }
@@ -105,7 +97,7 @@ public class Solution {
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        List<Team> teamsSortedByName = getTeams().stream().sorted((a, b) -> a.getName() - b.getName()).collect(Collectors.toList());
+        List<Team> teamsSortedByName = getTeams().stream().sorted(Comparator.comparingInt(Team::getName)).collect(Collectors.toList());
         for (Team t : teamsSortedByName) {
             stringBuilder
                     .append(t.getName())
@@ -123,13 +115,5 @@ public class Solution {
         }
 
         return stringBuilder.toString();
-    }
-
-    public double getScore() {
-        return this.score;
-    }
-
-    public void setScore(double score) {
-        this.score = score;
     }
 }
