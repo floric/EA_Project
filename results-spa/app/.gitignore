@@ -20,5 +20,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 src/output.json
+result.json
 result_27.json
 result_54.json

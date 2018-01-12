@@ -52,11 +52,11 @@ public class Evaluator {
             score += t.getMeetTeams().size() * TEAMS_INFLUENCE;
         }
 
-        double normalizedScore = 1.0 - (Math.abs((score / (teamsCount * (COOK_INFLUENCE + 3 * MEALS_INFLUENCE + 6 * TEAMS_INFLUENCE))) - 1.0));
+        double normalizedScore = Math.max(0, 1.0 - (Math.abs((score / (teamsCount * (COOK_INFLUENCE + 3 * MEALS_INFLUENCE + 6 * TEAMS_INFLUENCE))) - 1.0)));
 
         // minimal distance to travel for each team
         double totalDistance = getTotalDistance(teams);
-        double normalizedDistance = 1.0 / (totalDistance / teamsCount);
+        double normalizedDistance = teamsCount / totalDistance;
 
         score = Math.pow(normalizedScore, BASIC_SCORE_EXPONENT) * normalizedDistance;
 

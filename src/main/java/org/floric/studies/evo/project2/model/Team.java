@@ -48,7 +48,6 @@ public class Team {
         for (Optional<Meal> meal : meals) {
             if (meal.isPresent() && meal.get().getCook() == this.name) {
                 return meal;
-
             }
         }
 

@@ -32,10 +32,10 @@ public class App {
             System.out.println(String.format("%d: %f, %f", entry.getKey(), entry.getValue()[0], entry.getValue()[1]));
         }
 
-        //EvolutionarySolver solver = new EvolutionarySolver();
-        //solver.solve(positions);
-        HillClimber hillClimber = new HillClimber();
-        hillClimber.solve(positions);
+        EvolutionarySolver solver = new EvolutionarySolver();
+        solver.solve(positions);
+        // HillClimber hillClimber = new HillClimber();
+        // hillClimber.solve(positions);
     }
 
     public static Map<Integer, Double[]> generatePositions(int count, long seed) {
