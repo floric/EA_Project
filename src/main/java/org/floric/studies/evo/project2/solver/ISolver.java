@@ -6,4 +6,5 @@ import java.util.Map;
 
 public interface ISolver {
     Solution solve(Map<Integer, Double[]> positions);
+    String getName();
 }

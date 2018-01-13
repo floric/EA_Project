@@ -55,4 +55,9 @@ public class BruteForceSolver implements ISolver {
 
         return Solution.fromGenotype(bestGen);
     }
+
+    @Override
+    public String getName() {
+        return "Bruteforce Algorithm";
+    }
 }

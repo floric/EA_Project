@@ -77,6 +77,10 @@ public class Evaluator {
         return distance;
     }
 
+    public double getTotalDistance(ImmutableList<Integer> gen) {
+        return getTotalDistance(Solution.fromGenotype(gen).getTeams());
+    }
+
     public double getTotalDistance(Set<Team> teams) {
         double totalDistance = 0.0;
         for (Team t : teams) {

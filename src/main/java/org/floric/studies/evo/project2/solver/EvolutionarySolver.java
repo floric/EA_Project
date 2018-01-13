@@ -20,24 +20,27 @@ public class EvolutionarySolver implements ISolver {
 
     private static final double INDIVIDUALS_COUNT_MULTIPLY = 2;
     private static final int SELECT_COUNT = 1;
-
     private static final int MUTATION_WEIGHT_INFLUENCE = 4;
-    public static final int ITERATIONS = 50000;
+
     private static final int ITERATIONS_UNTIL_MUTATION_WEIGHTS_ADJUST = 500;
     private static final int ITERATIONS_TO_EXPORT_RESULT = 2000;
+    private static final double STD_ITERATIONS_FACTOR = 1.5;
 
     private Map<String, Integer> improvements = Maps.newHashMap();
     private Map<String, Double> mutationWeights = Maps.newHashMap();
     private ExportResult result;
     private long totalImprovements = 0L;
+    private int candidates = 0;
 
-    public EvolutionarySolver() {
+    public EvolutionarySolver(int candidates) {
+        this.candidates = candidates;
     }
 
     public Solution solve(Map<Integer, Double[]> positions) {
         Evaluator ev = new Evaluator(positions);
         double bestValue = Double.MIN_VALUE;
         int individualsCount = (int) (positions.size() * INDIVIDUALS_COUNT_MULTIPLY);
+        int iterations = candidates / individualsCount;
 
         ImmutableList<Integer> bestIndividuum = ImmutableList.of();
         result = new ExportResult();
@@ -48,10 +51,10 @@ public class EvolutionarySolver implements ISolver {
         List<ImmutableList<Integer>> individuals = initIndividuums(individualsCount, positions);
         initMutationProbabilities();
 
-        System.out.println(String.format("%d iterations; %d individuals with %d selections", ITERATIONS, individualsCount, SELECT_COUNT));
+        System.out.println(String.format("%d iterations; %d individuals with %d selections; %d candidates", iterations, individualsCount, SELECT_COUNT, individualsCount * iterations));
 
         // loop
-        for (int i = 0; i < ITERATIONS; i++) {
+        for (int i = 0; i < iterations; i++) {
             // evaluate
             List<Double> scores = Lists.newArrayList();
 
@@ -66,7 +69,7 @@ public class EvolutionarySolver implements ISolver {
                     bestIndividuum = individuum;
                     Solution s = Solution.fromGenotype(bestIndividuum);
                     double totalDistance = ev.getTotalDistance(s.getTeams());
-                    System.out.println(String.format("%d: New Score: %f, distance: %f after %d created individuums", i, bestValue, totalDistance, i * individualsCount));
+                    // System.out.println(String.format("%d: New Score: %f, distance: %f after %d created individuums", i, bestValue, totalDistance, i * individualsCount));
                     result.getSolutions().put(i, bestIndividuum);
                     result.setBestIndividuum(bestIndividuum);
                 }
@@ -88,7 +91,6 @@ public class EvolutionarySolver implements ISolver {
             // modify mutation weights
             if (i % ITERATIONS_UNTIL_MUTATION_WEIGHTS_ADJUST == 0) {
                 modifyMutationWeights();
-                System.out.println(String.format("%s: best: %f", i, bestValue, individuals.size()));
             }
             // export progress to file
             if (i % ITERATIONS_TO_EXPORT_RESULT == 0) {
@@ -98,9 +100,13 @@ public class EvolutionarySolver implements ISolver {
         }
 
         exportProgress();
-        printSolution(bestIndividuum, ev);
 
-        return null;
+        return Solution.fromGenotype(bestIndividuum);
+    }
+
+    @Override
+    public String getName() {
+        return "Evolutionary Algorithm";
     }
 
     private void modifyMutationWeights() {
@@ -108,13 +114,6 @@ public class EvolutionarySolver implements ISolver {
             double newWeight = ((MUTATION_WEIGHT_INFLUENCE - 1.0) * value + getImprovementsCount(key) / (double) totalImprovements) / MUTATION_WEIGHT_INFLUENCE;
             mutationWeights.put(key, newWeight);
         });
-    }
-
-    private void printSolution(ImmutableList<Integer> bestIndividuum, Evaluator ev) {
-        Solution s = Solution.fromGenotype(bestIndividuum);
-        System.out.println(String.format("Solution:\n%s", s));
-        System.out.println(String.format("Distance: %f", ev.getTotalDistance(s.getTeams())));
-        System.out.println(bestIndividuum);
     }
 
     private void exportProgress() {
