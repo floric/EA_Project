@@ -40,7 +40,7 @@ public class Solution {
         return ImmutableList.copyOf(genotype);
     }
 
-    private static ImmutableList<Integer> generatePartOfGenotype(int count) {
+    public static ImmutableList<Integer> generatePartOfGenotype(int count) {
         return ImmutableList.copyOf(IntStream.range(0, count).boxed().collect(Collectors.toList()));
     }
 

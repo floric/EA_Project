@@ -14,7 +14,7 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class HillClimber {
+public class HillClimber implements ISolver {
 
     public static final int MAX_ITERATIONS_SINCE_LAST_CHANGE = 400;
     public static final int ITERATIONS_PER_THREAD = 5000;

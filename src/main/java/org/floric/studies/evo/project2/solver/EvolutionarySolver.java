@@ -16,13 +16,13 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
-public class EvolutionarySolver {
+public class EvolutionarySolver implements ISolver {
 
-    private static final double SIMULATED_ANNEALING_SPEED = 0.999;
+    private static final double INDIVIDUALS_COUNT_MULTIPLY = 2;
+    private static final int SELECT_COUNT = 1;
+
     private static final int MUTATION_WEIGHT_INFLUENCE = 4;
-    private static final double ANNEALING_BORDER_DROP_FACTOR = 0.95;
-    private static final double ANNEALING_BORDER_MIN_SCORE = 0.3;
-    private static final double ANNEALING_BORDER_MAX_FACTOR = 0.97;
+    public static final int ITERATIONS = 50000;
     private static final int ITERATIONS_UNTIL_MUTATION_WEIGHTS_ADJUST = 500;
     private static final int ITERATIONS_TO_EXPORT_RESULT = 2000;
 
@@ -36,12 +36,9 @@ public class EvolutionarySolver {
 
     public Solution solve(Map<Integer, Double[]> positions) {
         Evaluator ev = new Evaluator(positions);
-        int individualsCount = 80;
-        int iterations = 200000;
         double bestValue = Double.MIN_VALUE;
-        double minScore = 0.0;
-        double scoreFraction = ANNEALING_BORDER_MIN_SCORE;
-        int bestValueIteration = 0;
+        int individualsCount = (int) (positions.size() * INDIVIDUALS_COUNT_MULTIPLY);
+
         ImmutableList<Integer> bestIndividuum = ImmutableList.of();
         result = new ExportResult();
 
@@ -51,10 +48,11 @@ public class EvolutionarySolver {
         List<ImmutableList<Integer>> individuals = initIndividuums(individualsCount, positions);
         initMutationProbabilities();
 
+        System.out.println(String.format("%d iterations; %d individuals with %d selections", ITERATIONS, individualsCount, SELECT_COUNT));
+
         // loop
-        for (int i = 0; i < iterations; i++) {
+        for (int i = 0; i < ITERATIONS; i++) {
             // evaluate
-            List<Double> evaluations = Lists.newArrayList();
             List<Double> scores = Lists.newArrayList();
 
             // check individuals, if they are better then existing best one
@@ -66,75 +64,31 @@ public class EvolutionarySolver {
                 if (score > bestValue) {
                     bestValue = score;
                     bestIndividuum = individuum;
-                    bestValueIteration = i;
-                    scoreFraction = minScore * ANNEALING_BORDER_DROP_FACTOR / bestValue;
                     Solution s = Solution.fromGenotype(bestIndividuum);
                     double totalDistance = ev.getTotalDistance(s.getTeams());
-                    System.out.println(String.format("New Score: %f, distance: %f", bestValue, totalDistance));
+                    System.out.println(String.format("%d: New Score: %f, distance: %f after %d created individuums", i, bestValue, totalDistance, i * individualsCount));
                     result.getSolutions().put(i, bestIndividuum);
                     result.setBestIndividuum(bestIndividuum);
                 }
             }
 
-            // set min score border of annealing
-            minScore = bestValue * ANNEALING_BORDER_MAX_FACTOR * (scoreFraction + (1.0 - scoreFraction) * (1 - Math.pow(SIMULATED_ANNEALING_SPEED, i - bestValueIteration)));
-            result.getMinScore().add(minScore);
-
-            for (int j = 0; j < individuals.size(); j++) {
-                double score = scores.get(j);
-                evaluations.add(Math.max(0.0, score - minScore));
-            }
-
-            // normalize scores for selection
-            double minEvalutations = evaluations.stream().mapToDouble(val -> val).min().orElse(0.0);
-            double sumEvalutations = evaluations.stream().mapToDouble(val -> val - minEvalutations).sum();
-
-            double maxScores = scores.stream().mapToDouble(val -> val).max().orElse(1.0);
-            double avgScores = scores.stream().mapToDouble(val -> val).average().orElse(0.0);
-            result.getAvgScore().add(avgScores);
-
-            for (int j = 0; j < evaluations.size(); j++) {
-                Double val = evaluations.get(j);
-                double fraction = sumEvalutations == 0.0 ? 0.0 : ((val - minEvalutations) / sumEvalutations);
-                evaluations.set(j, fraction);
-            }
-
-            // if border of annealing is hit, use best individuum to continue
-            Set<Integer> bestIndividuums = Sets.newHashSet();
-            if (sumEvalutations == 0.0) {
-                for (int j = 0; j < scores.size(); j++) {
-                    if (scores.get(j) == maxScores) {
-                        bestIndividuums.add(j);
-                    }
-                }
-            }
-            for (Integer index : bestIndividuums) {
-                evaluations.set(index, 1.0 / bestIndividuums.size());
-            }
-
             // select
-            List<ImmutableList<Integer>> tmp = ImmutableList.copyOf(individuals);
-            individuals.clear();
-            for (int j = 0; j < individualsCount; j++) {
-                int selectIndex = select(evaluations);
-                individuals.add(tmp.get(selectIndex));
-            }
+            individuals = selectBestN(scores, individuals, SELECT_COUNT);
 
             // mutate
-            tmp = ImmutableList.copyOf(individuals);
+            List<ImmutableList<Integer>> tmp = ImmutableList.copyOf(individuals);
             individuals.clear();
-            for (ImmutableList<Integer> individuum : tmp) {
-                individuals.add(mutate(individuum, ev));
+            Random rnd = new Random();
+            for (int j = 0; j < individualsCount; j++) {
+                int individuumIndex = rnd.nextInt(tmp.size());
+                ImmutableList<Integer> mutated = mutate(tmp.get(individuumIndex), ev);
+                individuals.add(mutated);
             }
-
-            // calculate ratio of individuums with score higher then annealing border
-            long validIndividuums = evaluations.stream().filter(val -> val > 0.0).count();
-            result.getValidIndividuumsRatio().add((double) validIndividuums / evaluations.size());
 
             // modify mutation weights
             if (i % ITERATIONS_UNTIL_MUTATION_WEIGHTS_ADJUST == 0) {
                 modifyMutationWeights();
-                System.out.println(String.format("%s: min: %f, best: %f; valid individuums: %d", i, minScore, bestValue, validIndividuums));
+                System.out.println(String.format("%s: best: %f", i, bestValue, individuals.size()));
             }
             // export progress to file
             if (i % ITERATIONS_TO_EXPORT_RESULT == 0) {
@@ -188,20 +142,29 @@ public class EvolutionarySolver {
         return individuals;
     }
 
-    private int select(List<Double> evaluations) {
-        Random rnd = new Random();
-        double val = rnd.nextDouble();
-        double currentSum = evaluations.get(0);
+    private List<ImmutableList<Integer>> selectBestN(List<Double> scores, List<ImmutableList<Integer>> individuals, int n) {
+        List<ImmutableList<Integer>> bestIndividuals = Lists.newArrayList();
+        Set<Integer> bestUsedIndices = Sets.newHashSet();
 
-        for (int k = 0; k < evaluations.size() - 1; k++) {
-            if (val < currentSum) {
-                return k;
+        for (int i = 0; i < n; i++) {
+            double maxScore = Double.MIN_VALUE;
+            int maxIndex = 0;
+
+            for (int j = 0; j < individuals.size(); j++) {
+                double curScore = scores.get(j);
+                if (curScore > maxScore && !bestUsedIndices.contains(j)) {
+                    maxScore = curScore;
+                    maxIndex = j;
+                }
             }
-            currentSum += evaluations.get(k + 1);
+
+            bestIndividuals.add(individuals.get(maxIndex));
+            bestUsedIndices.add(maxIndex);
         }
 
-        return evaluations.size() - 1;
+        return bestIndividuals;
     }
+
 
     private ImmutableList<Integer> mutate(ImmutableList<Integer> individuum, Evaluator ev) {
         Mutator m = new Mutator();

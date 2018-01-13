@@ -2,6 +2,7 @@ package org.floric.studies.evo.project2.main;
 
 import com.google.common.collect.ImmutableList;
 import org.floric.studies.evo.project2.model.Solution;
+import org.floric.studies.evo.project2.solver.BruteForceSolver;
 import org.floric.studies.evo.project2.solver.EvolutionarySolver;
 import org.floric.studies.evo.project2.solver.HillClimber;
 
@@ -14,7 +15,7 @@ import java.util.Random;
 public class App {
 
     public static final long POSITIONS_SEED = 123L;
-    public static final int TEAMS_COUNT = 27;
+    public static final int TEAMS_COUNT = 9;
 
     public static void main(String[] args) {
         try {
@@ -36,6 +37,8 @@ public class App {
         solver.solve(positions);
         // HillClimber hillClimber = new HillClimber();
         // hillClimber.solve(positions);
+        //BruteForceSolver solver = new BruteForceSolver();
+        //solver.solve(positions);
     }
 
     public static Map<Integer, Double[]> generatePositions(int count, long seed) {
