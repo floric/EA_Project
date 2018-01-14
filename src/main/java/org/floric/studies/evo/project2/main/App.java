@@ -3,10 +3,7 @@ package org.floric.studies.evo.project2.main;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.floric.studies.evo.project2.model.Solution;
-import org.floric.studies.evo.project2.solver.Evaluator;
-import org.floric.studies.evo.project2.solver.EvolutionarySolver;
-import org.floric.studies.evo.project2.solver.HillClimber;
-import org.floric.studies.evo.project2.solver.ISolver;
+import org.floric.studies.evo.project2.solver.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,23 +15,23 @@ import java.util.Random;
 public class App {
 
     public static final long POSITIONS_SEED = 123L;
-    public static final int TEAMS_COUNT = 54;
-    public static final int CANDIDATES_TO_EVALUATE = 1200000;
+    public static final int TEAMS_COUNT = 18;
+    public static final int CANDIDATES_TO_EVALUATE = 1000000;
 
     public static void main(String[] args) {
         List<ISolver> solvers = Lists.newLinkedList();
-        solvers.add(new HillClimber(CANDIDATES_TO_EVALUATE));
+        // solvers.add(new HillClimber(CANDIDATES_TO_EVALUATE));
         solvers.add(new EvolutionarySolver(CANDIDATES_TO_EVALUATE));
         // solvers.add(new BruteForceSolver());
 
         // start server to show evolutionary results
-        try {
+        /*try {
             ProcessBuilder bld = new ProcessBuilder("yarn", "start");
             bld.directory(new File("./results-spa/app"));
             bld.start();
         } catch (IOException e) {
             System.out.println("Starting display server failed!");
-        }
+        }*/
 
         Map<Integer, Double[]> positions = generatePositions(TEAMS_COUNT, POSITIONS_SEED);
         Evaluator evaluator = new Evaluator(positions);

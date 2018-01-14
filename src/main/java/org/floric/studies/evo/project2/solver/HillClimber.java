@@ -14,10 +14,12 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static org.floric.studies.evo.project2.solver.EvolutionarySolver.printProgress;
+
 public class HillClimber implements ISolver {
 
     public int candidates = 0;
-    public static final int CHILDREN_COUNT = 5000;
+    public static final int CHILDREN_COUNT = 500;
 
     public HillClimber(int candidates) {
         this.candidates = candidates;
@@ -26,14 +28,15 @@ public class HillClimber implements ISolver {
     public Solution solve(Map<Integer, Double[]> positions) {
         Mutator mutator = new Mutator();
         Evaluator ev = new Evaluator(positions);
+        int cores = Runtime.getRuntime().availableProcessors();
 
         ImmutableList<Integer> newGen = Solution.generateRandomGenotype(positions.size());
         int i = 0;
         double bestScore = 0.0;
-        int iterations = candidates / CHILDREN_COUNT;
+        int iterations = candidates / (CHILDREN_COUNT * cores);
         ImmutableList<Integer> bestGen = newGen;
 
-        System.out.println(String.format("%d iterations and %d children; %d candidates", iterations, CHILDREN_COUNT, iterations * CHILDREN_COUNT));
+        System.out.println(String.format("%d iterations and %d children; %d candidates", iterations, CHILDREN_COUNT, iterations * CHILDREN_COUNT * cores));
 
         // do at least three iterations, otherwise stop if no improvements are done anymore
         while(i < iterations) {
@@ -45,6 +48,7 @@ public class HillClimber implements ISolver {
             }
 
             i++;
+            printProgress(i, iterations);
         }
 
         return Solution.fromGenotype(bestGen);

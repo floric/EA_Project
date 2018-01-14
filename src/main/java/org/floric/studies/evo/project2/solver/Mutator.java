@@ -57,17 +57,6 @@ public class Mutator {
         return new MutationResult(individuum, mutationType);
     }
 
-    private ImmutableList<Integer> setVal(ImmutableList<Integer> s, int newVal, int pos) {
-        if (pos >= s.size()) {
-            throw new RuntimeException("Illegal position");
-        }
-
-        List<Integer> strings = Lists.newArrayList(s).subList(0, pos);
-        strings.add(newVal);
-        strings.addAll(s.subList(pos + 1, s.size()));
-        return ImmutableList.copyOf(strings);
-    }
-
     public static ImmutableList<Integer> cyclicSwap(ImmutableList<Integer> s) {
         Random rnd = new Random();
         return cyclicSwap(s, rnd.nextLong());
@@ -91,8 +80,8 @@ public class Mutator {
         int cookAIndex = rnd.nextInt(teamsCount) * 3;
         int guestBIndex = cookAIndex + rnd.nextInt(2) + 1;
 
-        int cookA = s.get(cookAIndex);
-        int cookB = s.get(guestBIndex);
+        int teamA = s.get(cookAIndex);
+        int teamB = s.get(guestBIndex);
 
         int cookBIndex = 0;
         int guestAIndex = 0;
@@ -105,7 +94,7 @@ public class Mutator {
             }
 
             int teamIndex = s.get(i);
-            if (teamIndex == cookB) {
+            if (teamIndex == teamB) {
                 cookBIndex = i;
                 break;
             }
@@ -121,7 +110,7 @@ public class Mutator {
             }
 
             int teamIndex = s.get(i);
-            if (teamIndex == cookA) {
+            if (teamIndex == teamA) {
                 guestAIndex = i;
                 break;
             }

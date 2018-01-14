@@ -3,16 +3,17 @@ package org.floric.studies.evo.project2.solver;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.floric.studies.evo.project2.model.Solution;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class BruteForceSolver implements ISolver {
     @Override
     public Solution solve(Map<Integer, Double[]> positions) {
         Evaluator ev = new Evaluator(positions);
+
+        List<Set<Integer>> cookPermutations = getCookPermutations(positions.size());
 
         long startTime = System.currentTimeMillis();
         ImmutableList<Integer> partA = Solution.generatePartOfGenotype(positions.size());
@@ -55,6 +56,15 @@ public class BruteForceSolver implements ISolver {
 
         return Solution.fromGenotype(bestGen);
     }
+
+    private List<Set<Integer>> getCookPermutations(int n) {
+        List<Set<Integer>> cooks = Lists.newLinkedList();
+
+
+
+        return cooks;
+    }
+
 
     @Override
     public String getName() {

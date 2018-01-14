@@ -15,21 +15,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public class EvolutionarySolver implements ISolver {
 
     private static final double INDIVIDUALS_COUNT_MULTIPLY = 2;
     private static final int SELECT_COUNT = 1;
-    private static final int MUTATION_WEIGHT_INFLUENCE = 4;
+    private static final int MUTATION_WEIGHT_INFLUENCE = 5;
 
-    private static final int ITERATIONS_UNTIL_MUTATION_WEIGHTS_ADJUST = 500;
+    private static final int ITERATIONS_UNTIL_MUTATION_WEIGHTS_ADJUST = 200;
     private static final int ITERATIONS_TO_EXPORT_RESULT = 2000;
-    private static final double STD_ITERATIONS_FACTOR = 1.5;
 
-    private Map<String, Integer> improvements = Maps.newHashMap();
+    private static final double MUTATION_MIN_SUCCESS_RATE = 0.001;
+
+    private Map<String, Long> improvements = Maps.newHashMap();
+    private Map<String, Long> failures = Maps.newHashMap();
+
     private Map<String, Double> mutationWeights = Maps.newHashMap();
     private ExportResult result;
-    private long totalImprovements = 0L;
     private int candidates = 0;
 
     public EvolutionarySolver(int candidates) {
@@ -67,9 +71,6 @@ public class EvolutionarySolver implements ISolver {
                 if (score > bestValue) {
                     bestValue = score;
                     bestIndividuum = individuum;
-                    Solution s = Solution.fromGenotype(bestIndividuum);
-                    double totalDistance = ev.getTotalDistance(s.getTeams());
-                    // System.out.println(String.format("%d: New Score: %f, distance: %f after %d created individuums", i, bestValue, totalDistance, i * individualsCount));
                     result.getSolutions().put(i, bestIndividuum);
                     result.setBestIndividuum(bestIndividuum);
                 }
@@ -89,7 +90,7 @@ public class EvolutionarySolver implements ISolver {
             }
 
             // modify mutation weights
-            if (i % ITERATIONS_UNTIL_MUTATION_WEIGHTS_ADJUST == 0) {
+            if (i % ITERATIONS_UNTIL_MUTATION_WEIGHTS_ADJUST == 0 && i != 0) {
                 modifyMutationWeights();
             }
             // export progress to file
@@ -97,6 +98,8 @@ public class EvolutionarySolver implements ISolver {
                 exportProgress();
             }
             result.getScore().add(bestValue);
+
+            printProgress(i, iterations);
         }
 
         exportProgress();
@@ -110,10 +113,26 @@ public class EvolutionarySolver implements ISolver {
     }
 
     private void modifyMutationWeights() {
+        double successRateSum = mutationWeights.entrySet().stream().mapToDouble(entry -> {
+            long improvements = getImprovementsCount(entry.getKey());
+            long failures = getFailuresCount(entry.getKey());
+            return getSuccessRate(improvements, failures);
+        }).sum();
+
         mutationWeights.forEach((key, value) -> {
-            double newWeight = ((MUTATION_WEIGHT_INFLUENCE - 1.0) * value + getImprovementsCount(key) / (double) totalImprovements) / MUTATION_WEIGHT_INFLUENCE;
+            long improvements = getImprovementsCount(key);
+            long failures = getFailuresCount(key);
+            double successRate = getSuccessRate(improvements, failures);
+            double newWeight = ((MUTATION_WEIGHT_INFLUENCE - 1.0) * value + (successRate / successRateSum)) / MUTATION_WEIGHT_INFLUENCE;
             mutationWeights.put(key, newWeight);
         });
+        resetSuccessCount();
+
+        System.out.println(mutationWeights.entrySet().stream().map(val -> String.format("%s -> %f; ", val.getKey(), val.getValue())).collect(Collectors.joining()));
+    }
+
+    private double getSuccessRate(long improvements, long failures) {
+        return Math.max(MUTATION_MIN_SUCCESS_RATE, (double) improvements / (failures + improvements));
     }
 
     private void exportProgress() {
@@ -173,15 +192,33 @@ public class EvolutionarySolver implements ISolver {
         double newScore = ev.evaluate(Solution.fromGenotype(result.getIndividuum()));
 
         if (newScore > oldScore) {
-            int improvementsForType = getImprovementsCount(result.getMutationType()) + 1;
+            long improvementsForType = getImprovementsCount(result.getMutationType()) + 1;
             improvements.put(result.getMutationType(), improvementsForType);
-            totalImprovements++;
+        } else {
+            long failuresForType = getFailuresCount(result.getMutationType()) + 1;
+            failures.put(result.getMutationType(), failuresForType);
         }
 
         return result.getIndividuum();
     }
 
-    private int getImprovementsCount(String mutationType) {
+    private long getImprovementsCount(String mutationType) {
         return improvements.containsKey(mutationType) ? improvements.get(mutationType) : 0;
+    }
+
+    private long getFailuresCount(String mutationType) {
+        return failures.containsKey(mutationType) ? failures.get(mutationType) : 0;
+    }
+
+    private void resetSuccessCount() {
+        improvements.forEach((name, val) -> improvements.put(name, 0l));
+        failures.forEach((name, val) -> failures.put(name, 0l));
+    }
+
+    public static void printProgress(int i, int maxI) {
+        int step = maxI / 20;
+        if (i % step == 0) {
+            System.out.println(String.format("%d/%d -> %d percent", i, maxI, 100 * i / maxI));
+        }
     }
 }
