@@ -15,14 +15,14 @@ import java.util.Random;
 public class App {
 
     public static final long POSITIONS_SEED = 123L;
-    public static final int TEAMS_COUNT = 18;
-    public static final int CANDIDATES_TO_EVALUATE = 1000000;
+    public static final int TEAMS_COUNT = 9;
+    public static final int CANDIDATES_TO_EVALUATE = 6000000;
 
     public static void main(String[] args) {
         List<ISolver> solvers = Lists.newLinkedList();
         // solvers.add(new HillClimber(CANDIDATES_TO_EVALUATE));
-        solvers.add(new EvolutionarySolver(CANDIDATES_TO_EVALUATE));
-        // solvers.add(new BruteForceSolver());
+        // solvers.add(new EvolutionarySolver(CANDIDATES_TO_EVALUATE));
+        solvers.add(new BruteForceSolver());
 
         // start server to show evolutionary results
         /*try {

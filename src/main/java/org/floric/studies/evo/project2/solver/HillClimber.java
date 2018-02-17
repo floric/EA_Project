@@ -19,7 +19,7 @@ import static org.floric.studies.evo.project2.solver.EvolutionarySolver.printPro
 public class HillClimber implements ISolver {
 
     public int candidates = 0;
-    public static final int CHILDREN_COUNT = 500;
+    public static final int CHILDREN_COUNT = 1000;
 
     public HillClimber(int candidates) {
         this.candidates = candidates;
@@ -40,7 +40,7 @@ public class HillClimber implements ISolver {
 
         // do at least three iterations, otherwise stop if no improvements are done anymore
         while(i < iterations) {
-            newGen = getBestSolutionInParallel(newGen, mutator, ev, positions);
+            newGen = getBestSolutionInParallel(bestGen, mutator, ev, positions);
             double newScore = ev.evaluate(newGen);
             if (newScore > bestScore) {
                 bestGen = newGen;

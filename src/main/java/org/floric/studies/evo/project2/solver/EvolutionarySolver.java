@@ -11,10 +11,8 @@ import org.floric.studies.evo.project2.model.Solution;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.text.DecimalFormat;
+import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -217,7 +215,7 @@ public class EvolutionarySolver implements ISolver {
 
     public static void printProgress(int i, int maxI) {
         int step = maxI / 20;
-        if (i % step == 0) {
+        if (step != 0 && i % step == 0) {
             System.out.println(String.format("%d/%d -> %d percent", i, maxI, 100 * i / maxI));
         }
     }
